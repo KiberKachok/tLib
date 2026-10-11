@@ -239,7 +239,7 @@ Page 2/150 rendered in 1.18s
 ### INFO уровень
 ```
 Standalone PDF converted — pdf=09582, pages=150
-Cache prepared successfully — archive=12345-TST, partial=True   (partial: в архиве есть PDF на паузе)
+Cache prepared successfully — archive=12345-TST, partial=True, prepare_ms=2350   (partial: в архиве есть PDF на паузе; prepare_ms: от захвата lock до записи _meta.json, без ожидания жеста)
 PDF conversion run — png_dir=.../data.cache/09582/09582-png, rendered=5, done=5, total=150, completed=False, render_ms=1840
 PDF conversion resumed — archive=09582, png_dir=09582-png, rendered=20, done=25, total=150, completed=False, extract_ms=0
 PDF page wait — archive=09582, png_dir=09582-png, want=40, done=26, total=150, converting=09582.pdf, waited_ms=420, ready=True

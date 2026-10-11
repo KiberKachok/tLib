@@ -1,4 +1,4 @@
-# Version 2.9 - 09.10.2026 10:20:00 GMT
+# Version 2.10 - 11.10.2026 09:36:16 GMT
 # Cache Prepare Service для TlibWebApp
 # Описание: Централизованный сервис подготовки кеша архивов.
 #           Единственный владелец _prepare.json и lock-логики.
@@ -31,6 +31,8 @@
 # 2.9: предусловия докрутки (meta валидна, запись partial, исходник на месте) — одна функция
 #      resumable_pdf_entry для докрутки и поля rendering в /pages. Иначе вьюер опрашивал бы
 #      /pages, когда докрутка заведомо выходит, не начав.
+# 2.10: prepare_ms в «Cache prepared successfully» — от захвата lock до записи _meta.json (распаковка, GPS,
+#       первые страницы PDF, картинки). Отделяет работу сервера от ожидания жеста в access-логе.
 
 import os
 import json
@@ -374,9 +376,10 @@ async def prepare_archive_cache(archive_name: str, zip_path: Path, stats_collect
     if not _acquire_lock(archive_name):
         app_logger.debug(f"Lock busy for {archive_name}, another worker is preparing")
         return
-    
+
     cache_dir = get_cache_dir(archive_name)
-    
+    started = time.perf_counter()
+
     try:
         # Шаг 4: Пишем prepare status ДО purge
         write_prepare_status(archive_name, stage=CACHE_STAGE_STARTING)
@@ -409,9 +412,11 @@ async def prepare_archive_cache(archive_name: str, zip_path: Path, stats_collect
         # Шаг 11: Записываем _meta.json атомарно с полной информацией
         size = await write_meta(archive_name, zip_path, cache_dir, files_info, geo_archive_info)
 
-        # partial — признак архива с PDF на паузе; нагрузку меряет rendered в «PDF conversion run»
+        # partial — признак архива с PDF на паузе; нагрузку меряет rendered в «PDF conversion run».
+        # prepare_ms — работа сервера над архивом; ожидание lock и жеста пользователя сюда не входят
         log_with_data(logging.INFO, "Cache prepared successfully", archive=archive_name,
-                      partial=_has_partial(files_info))
+                      partial=_has_partial(files_info),
+                      prepare_ms=round((time.perf_counter() - started) * 1000))
         _record_cache_prepared(stats_collector)
 
         # Шаг 12: Освобождаем место по фактическому размеру: своя папка под lock в обход не входит.

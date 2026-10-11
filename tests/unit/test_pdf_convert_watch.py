@@ -1,4 +1,4 @@
-# Version 2.6 - 07.10.2026 06:08:35 GMT
+# Version 2.7 - 11.10.2026 09:36:37 GMT
 # Тесты рендера PDF по окну просмотра (services/conversion/pdf_to_png_service.py,
 # services/cache/cache_watch.first_missing_in_window, cache_prepare_service.resume_pdf_conversion,
 # cache_pipeline.render_watched_pdfs)
@@ -23,9 +23,11 @@
 #      без зрителя — ничего лишнего.
 # 2.6: гистерезис докрутки — cache_watch.needs_resume: фикстура window задаёт окно в cache_watch
 #      (докрутка и стадия картинок константу больше не импортируют).
+# 2.7: подготовка ZIP пишет prepare_ms в «Cache prepared successfully».
 
 import asyncio
 import json
+import logging
 import shutil
 import time
 import zipfile
@@ -356,14 +358,21 @@ def test_standalone_pdf_partial_then_resume(tmp_path, cache_root, window, monkey
     _assert_lock_released(cache_root, "00002-TST")
 
 
-def test_zip_pdf_partial_then_resume(tmp_path, cache_root, window, monkeypatch):
+def test_zip_pdf_partial_then_resume(tmp_path, cache_root, window, monkeypatch, caplog):
     window(2, 4)
     source = _make_zip(tmp_path, "00001-TST")
     collector = _Collector()
     space = []
     monkeypatch.setattr(prepare_service, "ensure_cache_space", space.append)
+    caplog.set_level(logging.INFO, logger="tlibwebapp")
 
     _run(prepare_archive_cache("00001-TST", source, collector))
+
+    # Длительность подготовки в app.log: работа сервера отдельно от ожидания жеста
+    (prepared,) = [r.extra_data for r in caplog.records
+                   if r.getMessage() == "Cache prepared successfully"]
+    assert prepared["archive"] == "00001-TST" and prepared["partial"] is True
+    assert isinstance(prepared["prepare_ms"], int) and prepared["prepare_ms"] >= 0
 
     prepared_size = _meta(cache_root, "00001-TST")["cache_size_bytes"]
     entry = _meta(cache_root, "00001-TST")["files"][0]
