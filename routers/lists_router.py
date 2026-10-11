@@ -1,4 +1,4 @@
-# Version 2.3 - 07.01.2026 13:33:25 GMT
+# Version 2.4 - 11.10.2026 09:35:16 GMT
 # Lists Router для TlibWebApp
 # Описание: API endpoints для получения справочных списков из базы данных. Предоставляет шесть endpoint'ов:
 #           GET /api/dopshifr-list, /api/raion-obshiy-list, /api/tip-list, /api/kategoria-s-list, /api/kategoria-po-list,
@@ -6,11 +6,13 @@
 #           Оба endpoint'а категорий (kategoria-s-list и kategoria-po-list) возвращают единый объединённый список.
 #           Данные кэшируются при запуске приложения в app.state. reference-version позволяет фронтенду проверять актуальность
 #           справочников без загрузки самих списков. Использует функцию-фабрику для создания endpoint'ов.
+# 2.4: reference-version отдаёт started_at — время запуска сервера. Сменилось — сайт перезапущен (обычно деплой),
+#      фронт просит обновить страницу. version для этого не годится: он меняется и при обновлении БД.
 
 from fastapi import APIRouter, Request, Response
 
 # Импорт конфигурации
-from config import CACHE_CONTROL_NO_STORE, STATE_REFERENCE_VERSION
+from config import CACHE_CONTROL_NO_STORE, STATE_REFERENCE_VERSION, STATE_STARTED_AT
 
 # Импорт логгеров
 from logging_config import app_logger
@@ -87,19 +89,23 @@ for field_config in REFERENCE_FIELDS.values():
     )
 
 @router.get("/reference-version", summary="Получить версию справочников",
-            description="Возвращает текущую версию справочных списков из app.state (меняется при обновлении БД)")
+            description="Возвращает текущую версию справочных списков из app.state (меняется при обновлении БД) "
+                        "и время запуска сервера (меняется при рестарте)")
 async def get_reference_version(request: Request, response: Response):
     """
-    Возвращает версию справочников из app.state.
+    Возвращает версию справочников и время запуска сервера из app.state.
 
-    Используется фронтендом для дешёвой проверки актуальности справочников.
+    Используется фронтендом для дешёвой проверки актуальности справочников (version)
+    и того, что сайт перезапущен и открытой вкладке пора обновиться (started_at).
     """
     try:
         response.headers["Cache-Control"] = CACHE_CONTROL_NO_STORE
         version = getattr(request.app.state, STATE_REFERENCE_VERSION, None)
+        started_at = getattr(request.app.state, STATE_STARTED_AT, None)
         return {
             "success": True,
-            "version": version
+            "version": version,
+            "started_at": started_at
         }
     except Exception as e:
         app_logger.error(f"Ошибка получения reference_version: {e}", exc_info=True)

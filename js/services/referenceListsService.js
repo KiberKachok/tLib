@@ -1,10 +1,13 @@
-// Version 1.4 - 15.06.2026
+// Version 1.5 - 11.10.2026 09:35:40 GMT
 // Описание: Сервис справочников для фронтенда. Выполняет фоновую проверку версии справочных списков через
 //           GET /api/reference-version (без кэширования), и при изменении версии обновляет списки (ДопШифр/РайонОбщий/Тип/Категории)
 //           с 1 повторной попыткой при ошибке. UI не блокируется: обновление выполняется в фоне, а при устойчивой ошибке
 //           (после 2 попыток) показывается sticky-сообщение через errorHandler, при этом в <select> остаются предыдущие значения.
 //           Вместо прямого вызова UIController эмитирует событие reference:lists-loaded через appState.
 //           Перенесён из js/modules/ в слой js/services/.
+// 1.5: та же проверка сравнивает started_at (время запуска сервера). Сменился — сайт перезапущен, вкладка работает
+//      на старом коде: sticky-просьба обновить страницу, дальнейшие проверки не идут. Иначе обновление списков
+//      (version при рестарте тоже новый) сняло бы просьбу через clearSticky — sticky-слот один.
 
 import { CONSTANTS } from '../config/constants.js';
 import { errorHandler } from '../core/errorHandler.js';
@@ -15,6 +18,8 @@ import { fetchApiJsonSafe } from '../utils/fetchUtils.js';
 const state = {
     initialized: false,
     currentVersion: null,
+    startedAt: null,
+    siteUpdated: false,
     lastCheckAt: 0,
     inFlightCheck: null,
     lastGoodLists: null
@@ -35,7 +40,7 @@ function nowMs() {
 async function fetchReferenceVersion() {
     const res = await fetchApiJsonSafe(CONSTANTS.API.REFERENCE_VERSION, { cache: 'no-store' }, { retries: 0 });
     if (!res.ok) return res;
-    return { ok: true, version: res.json.version ?? null };
+    return { ok: true, version: res.json.version ?? null, startedAt: res.json.started_at ?? null };
 }
 
 async function fetchList(endpoint) {
@@ -106,6 +111,9 @@ async function refreshListsWithRetry() {
 }
 
 async function maybeRefresh({ force = false } = {}) {
+    // Сайт перезапущен — страница ждёт перезагрузки, проверять больше нечего
+    if (state.siteUpdated) return;
+
     if (!force) {
         const elapsed = nowMs() - state.lastCheckAt;
         if (elapsed < CONSTANTS.TIMING.REFERENCE_CHECK_THROTTLE) return;
@@ -121,7 +129,10 @@ async function maybeRefresh({ force = false } = {}) {
             if (!state.lastGoodLists) {
                 await refreshListsWithRetry();
                 const v = await fetchReferenceVersion();
-                if (v.ok) state.currentVersion = v.version;
+                if (v.ok) {
+                    state.currentVersion = v.version;
+                    if (!state.startedAt) state.startedAt = v.startedAt;
+                }
                 return;
             }
 
@@ -129,6 +140,16 @@ async function maybeRefresh({ force = false } = {}) {
             if (!v.ok) {
                 // Не показываем сообщение пользователю: просто попробуем позже.
                 console.warn('ReferenceListsService: version check failed:', v.error);
+                return;
+            }
+
+            // Первая проверка не удалась — время запуска запоминаем по первой удачной
+            if (!state.startedAt) state.startedAt = v.startedAt;
+
+            // До сравнения version: при рестарте он тоже новый, а обновление списков сняло бы просьбу
+            if (v.startedAt && v.startedAt !== state.startedAt) {
+                state.siteUpdated = true;
+                errorHandler.setSticky?.(CONSTANTS.MESSAGES.SITE_UPDATED);
                 return;
             }
 

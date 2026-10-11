@@ -41,3 +41,5 @@ def test_reference_version(client: httpx.Client) -> None:
     assert body.get("success") is True, f"reference-version body: {body}"
     version = body.get("version")
     assert version is not None, "reference-version не вернул поле 'version'"
+    # По смене started_at открытая вкладка узнаёт, что сайт перезапущен, и просит обновить страницу
+    assert body.get("started_at"), "reference-version не вернул поле 'started_at'"
