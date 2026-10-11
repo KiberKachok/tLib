@@ -1,10 +1,11 @@
-// Version 1.4 - 09.10.2026 10:25:00 GMT
+// Version 1.5 - 11.10.2026 09:17:47 GMT
+// 1.5: showGesturePrompt — кнопка «Открыть отчёт» в placeholder вместо спиннера, пока вьюер ждёт жеста.
 // 1.4: ссылка «Прочее» — other-file-link и data-size: клик ждёт распаковку и сверяет Content-Length.
 // 1.3 - 25.09.2026 - resolveAndWait: kind=pdf убран из /resolve (PDF-вьюер ходит в /pages)
 // Описание: Shared утилиты для всех viewer-стратегий (PDF/Image/Track):
 //   - DOM-утилиты (setActiveLink, showSingleContainer, queryLinks, setupClickDelegates, findLinkByDataset, safeFocusElement)
 //   - HTML-строители (spinnerPlaceholderHtml, prepareFileLink, prepareLinkContext, buildViewersBlockHtml, buildOtherLinkHtml, SVG-иконки)
-//   - Viewer lifecycle (activateViewerIframe, showLoadingMessage, showViewerError, PLACEHOLDER_SELECTOR, STAGE_TO_MESSAGE)
+//   - Viewer lifecycle (activateViewerIframe, showLoadingMessage, showGesturePrompt, showViewerError, PLACEHOLDER_SELECTOR, STAGE_TO_MESSAGE)
 //   - Async loading (resolveAndWait)
 //   - Height management (adjustActiveViewerHeight, scheduleHeightAdjust, scheduleHeightAdjustOnLoad, VIEWER_CONFIGS, findVisibleViewer, parsePx)
 //   - Viewer switch (prepareViewerSwitch — общий для PDF и Image)
@@ -392,6 +393,25 @@ export function showLoadingMessage(container, message, detail = '') {
         <span class="spinner"></span>
         <span class="loading-message">${escapeHtml(message)}<span class="loading-dots"></span></span>
         ${detailHtml}
+    `;
+}
+
+/**
+ * Показывает в placeholder кнопку вместо спиннера, пока вьюер ждёт первого жеста пользователя.
+ * Обработчик не нужен: нажатие — тоже жест (pointerdown), его ловит whenUserGesture, и вьюер
+ * стартует штатно; activateViewerIframe затем удаляет placeholder (класс viewer-loading сохранён).
+ * @param {HTMLElement} container - контейнер viewer'а
+ * @param {string} buttonLabel - текст кнопки
+ * @param {string} hint - подпись под кнопкой
+ */
+export function showGesturePrompt(container, buttonLabel, hint) {
+    const placeholder = container.querySelector(PLACEHOLDER_SELECTOR);
+    if (!placeholder) return;
+
+    placeholder.className = 'viewer-loading';
+    placeholder.innerHTML = `
+        <button class="gesture-open-btn" type="button">${escapeHtml(buttonLabel)}</button>
+        <span class="gesture-hint">${escapeHtml(hint)}</span>
     `;
 }
 

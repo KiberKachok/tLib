@@ -1,5 +1,5 @@
 /*
-   Version 2.34 - 09.10.2026 10:25:00 GMT
+   Version 2.35 - 11.10.2026 09:17:47 GMT
 
    Универсальные стили для адаптивного интерфейса поиска по архиву турклуба.
    Определяет общую типографику, сетку страницы, стили формы/таблицы и оформление
@@ -26,6 +26,7 @@
    v2.32: .footer-site-notice — объявление под кнопками входа/публикации.
    v2.33: ссылка объявления серая как текст футера, синий убран; подчёркивание только hover.
    v2.34: клик по файлу «Прочее» — ссылка тускнеет, курсор ожидания, пока архив распаковывается.
+   v2.35: кнопка «Открыть отчёт» во вьюере PDF (.gesture-open-btn, стиль .retry-btn) и подпись .gesture-hint.
 */
 
 /* ------------------- Сброс и базовые настройки ------------------- */
@@ -1498,6 +1499,12 @@ html.plain-mode .tab-content.active .viewer {
     animation: loadingDots 1.5s infinite;
 }
 
+/* Подпись под кнопкой «Открыть отчёт» (кнопка — общий стиль с .retry-btn) */
+.viewer-loading .gesture-hint {
+    font-size: 14px;
+    color: #777;
+}
+
 /* Track loading placeholder (начальное состояние, трансформируется в .viewer-loading) */
 .track-loading-placeholder {
     display: flex;
@@ -1573,7 +1580,8 @@ html.plain-mode .tab-content.active .viewer {
     color: #555;
 }
 
-.app-init-error .retry-btn {
+.app-init-error .retry-btn,
+.viewer-loading .gesture-open-btn {
     background: var(--color-primary);
     color: white;
     border: none;
@@ -1584,11 +1592,13 @@ html.plain-mode .tab-content.active .viewer {
     transition: background var(--transition-normal), transform 0.1s;
 }
 
-.app-init-error .retry-btn:hover {
+.app-init-error .retry-btn:hover,
+.viewer-loading .gesture-open-btn:hover {
     background: var(--color-primary-dark);
 }
 
-.app-init-error .retry-btn:active {
+.app-init-error .retry-btn:active,
+.viewer-loading .gesture-open-btn:active {
     transform: translateY(1px);
 }
 

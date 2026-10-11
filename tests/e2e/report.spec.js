@@ -39,9 +39,19 @@ test.describe('Report', () => {
     await page.waitForTimeout(5000);
     expect(starters, starters.join('\n')).toEqual([]);
 
+    // Кеша нет (нет data-pages-total) — вместо спиннера кнопка «Открыть отчёт»; кеш есть — вьюер без неё
+    const openBtn = page.locator('#tab-1 .viewer-container .gesture-open-btn');
+    const pagesTotal = await page.locator('#tab-1 .viewer-container').first().getAttribute('data-pages-total');
+    if (pagesTotal) {
+      await expect(openBtn).toHaveCount(0);
+    } else {
+      await expect(openBtn).toBeVisible();
+    }
+
     await page.mouse.move(100, 100);
     await page.mouse.move(200, 200);
     await expect.poll(() => starters.length, { timeout: 10000 }).toBeGreaterThan(0);
+    await expect(openBtn).toHaveCount(0);
   });
 
   test('Очистка формы', async ({ page }) => {

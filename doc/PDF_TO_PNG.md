@@ -48,7 +48,7 @@ PDF_RENDER_WORKERS: int = 1
 - карточка отчёта рендерится через `/prepare?probe=1` (без запуска); при `not_prepared` ставится `cacheWarmService.prepareCache`, который стартует на первом жесте — у человека раньше клика по вкладке;
 - клик по файлу «Прочее» тоже запускает `prepareCache` и ждёт свой файл через `HEAD /cache/…` (готов, когда `Content-Length` совпал с размером из списка), затем скачивает его в той же вкладке — прямая ссылка на неподготовленный кеш давала 404;
 - `cacheWarmService.prepareCache` и `resolveFile` ждут жеста;
-- `resolvePdfViewer` ждёт жеста, если отчёта нет в кэше (нет `data-pages-total`), — чтобы лимит ретраев `/pages` у png-viewer отсчитывался от старта конвертации. Кэш с PDF, в том числе на паузе (`partial`), показывается сразу: готовые страницы видны, остальные докручивает опрос `/pages`.
+- `resolvePdfViewer` ждёт жеста, если отчёта нет в кэше (нет `data-pages-total`), — чтобы лимит ретраев `/pages` у png-viewer отсчитывался от старта конвертации. Пока жеста нет, на месте спиннера кнопка «Открыть отчёт» (`showGesturePrompt`; проверка — `hasUserGesture()`): человек, открывший deep-link и не тронувший мышь, иначе видел бесконечное «Загрузка...». Обработчика у кнопки нет — нажатие и есть жест. Кэш с PDF, в том числе на паузе (`partial`), показывается сразу: готовые страницы видны, остальные докручивает опрос `/pages`.
 
 Сервер жест не видит: `/prepare` без `probe` и `/resolve` по-прежнему запускают подготовку. Защита — от ботов, исполняющих наш фронтенд, а не от прямых запросов к API.
 
@@ -135,7 +135,7 @@ png-viewer.js → GET /api/png/09582/09582-png/pages → [251 файл]
 
 buildViewersHtml → computePngDir() → data-png-dir="09582/09582-png" (без data-pages-total)
   ↓
-resolvePdfViewer() — activateViewerIframe после первого жеста пользователя (whenUserGesture)
+resolvePdfViewer() — до жеста кнопка «Открыть отчёт»; activateViewerIframe после первого жеста пользователя (whenUserGesture)
   ↓
 png-viewer.js → GET /api/png/09582/09582-png/pages?want=1 → 404 (директория ещё создаётся)
   ↓
@@ -380,14 +380,14 @@ js/modules/ui/results/single.js     # handleSingleResult:
 │     /prepare?probe=1 (без запуска); not_prepared → prepareCache (ждёт жеста)
 │   prepareFiles из /prepare → pages/png_dir пробрасываются в buildViewersHtml
 │
-js/utils/userGesture.js             # whenUserGesture(): промис первого жеста пользователя
+js/utils/userGesture.js             # whenUserGesture(): промис первого жеста пользователя; hasUserGesture(): был ли жест
 js/services/cacheWarmService.js     # prepareCache/resolveFile ждут whenUserGesture()
 │
 js/modules/ui/results/viewers/
 ├── pdfViewer.js                    # Вьюер без resolve round-trip
 │     computePngDir() → детерминированный png_dir из archiveName + pdfName
 │     buildViewersHtml(): data-png-dir + data-pages-total вшиваются в HTML
-│     resolvePdfViewer(): без data-pages-total ждёт жеста → activateViewerIframe (без fetch)
+│     resolvePdfViewer(): без data-pages-total ждёт жеста (до него — кнопка «Открыть отчёт») → activateViewerIframe (без fetch)
 │     autoLoad(): resolvePdfViewer только для видимого PDF — из file в hash, иначе активного/первого;
 │       selectLink(): resolvePdfViewer для ещё не запущенного вьюера выбранного PDF
 │     buildPngViewerUrl(..., pagesTotal) → hash: dir=...&page=...&total=251

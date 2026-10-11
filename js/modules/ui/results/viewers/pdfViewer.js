@@ -1,4 +1,7 @@
-// Version 1.4 - 30.09.2026 - png-viewer стартует только для видимого PDF (autoLoad; при deep-link — PDF
+// Version 1.5 - 11.10.2026 09:17:47 GMT
+// 1.5: пока resolvePdfViewer ждёт жеста (кеша нет), на месте спиннера — кнопка «Открыть отчёт»:
+//   человек, открывший deep-link и не тронувший мышь, видел бесконечное «Загрузка...».
+// 1.4 - 30.09.2026 - png-viewer стартует только для видимого PDF (autoLoad; при deep-link — PDF
 //   из file в hash), скрытые — при выборе ссылки (selectLink): каждый запущенный вьюер опрашивает /pages
 //   и держит heartbeat своего PDF
 // Описание: Viewer-стратегия для PDF (PNG viewer). Реализует контракт viewer-стратегии:
@@ -7,7 +10,7 @@
 
 import { CONSTANTS, TAB_IDS, TAB_TOKENS } from '../../../../config/constants.js';
 import { escapeAttribute } from '../../../../utils/sanitize.js';
-import { whenUserGesture } from '../../../../utils/userGesture.js';
+import { whenUserGesture, hasUserGesture } from '../../../../utils/userGesture.js';
 import {
     parseViewStateFromHash, replaceUrlHash,
     setupPdfPageSyncListener, getSavedPdfPage,
@@ -16,7 +19,7 @@ import {
     setActiveLink, setupClickDelegates, findLinkByDataset,
     safeFocusElement, scheduleHeightAdjust, adjustActiveViewerHeight,
     prepareFileLink, prepareLinkContext, buildViewersBlockHtml, spinnerPlaceholderHtml,
-    showViewerError,
+    showViewerError, showGesturePrompt,
     activateViewerIframe,
     EXTERNAL_SVG, prepareViewerSwitch,
 } from './viewerHelpers.js';
@@ -115,7 +118,13 @@ function replacePlaceholderWithViewer(container, pngDir, page, pagesTotal) {
 async function resolvePdfViewer(container, pdfName) {
     // Без data-pages-total кэш не готов: конвертация стартует только после жеста
     // (cacheWarmService), а лимит ретраев /pages у png-viewer должен отсчитываться от её старта.
-    if (!container.dataset.pagesTotal) await whenUserGesture();
+    // Кто ещё не дал жеста, видит кнопку вместо спиннера: нажатие на неё — тоже жест.
+    if (!container.dataset.pagesTotal) {
+        if (!hasUserGesture()) {
+            showGesturePrompt(container, CONSTANTS.MESSAGES.OPEN_REPORT_BUTTON, CONSTANTS.MESSAGES.OPEN_REPORT_HINT);
+        }
+        await whenUserGesture();
+    }
 
     const iframe = container.querySelector('.png-viewer');
     if (iframe && iframe.src && !iframe.src.includes('about:blank') && iframe.src !== '') {
