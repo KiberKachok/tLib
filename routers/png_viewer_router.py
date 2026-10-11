@@ -1,30 +1,7 @@
-# Version 3.0 - 09.10.2026 10:20:00 GMT
 # PNG Viewer Router для TlibWebApp
 # Описание: API endpoints для PNG viewer. Предоставляет листинг PNG директорий в data.cache
 #           и списки PNG файлов для просмотра. Используется embedded-вьюером /png-viewer.
 #           Логика resolve переехала в единый cache_router POST /resolve.
-# 3.0: rendering=false, если докрутка не может стартовать: нет или невалидна meta, запись не partial,
-#      исходника нет (resumable_pdf_entry). Иначе вьюер опрашивал бы /pages, когда рисовать не из чего.
-# 2.9: поле rendering в ответе /pages — сервер рисует для want: идёт конвертация архива или нужна
-#      докрутка (cache_watch.needs_resume, гистерезис resume_pdf_conversion). Вьюер опрашивает, только
-#      пока rendering=true, иначе — при смене страницы: забытая вкладка не шлёт heartbeat всю ночь.
-# 2.8: long-poll /pages — страницы want нет на диске частичной директории: запрос ждёт её до
-#      PNG_PAGES_WAIT_SECONDS и отвечает, как только файл появился. Докрутка стартует до ожидания
-#      (asyncio.create_task), а не после ответа (BackgroundTasks). «PDF page wait» — одна строка
-#      на запрос с waited_ms и ready.
-# 2.7: docstring /pages — темп опроса 1–2 с и дозаполнение страниц позади want (код не менялся).
-# 2.6: INFO «PDF page wait» — страницы want нет на диске частичной директории, читатель видит заглушку;
-#      converting (PDF, который сейчас рендерится) показывает причину ожидания.
-# 2.5: рендер PDF по окну просмотра — /pages единственный триггер докрутки; решение «докручивать ли»
-#      (гистерезис по окну) — в resume_pdf_conversion, которая больше не учитывает «В кэш».
-# 2.4: имя архива и путь директории для heartbeat/докрутки берутся из проверенного full_path.
-# 2.3: /pages обновляет mtime папки архива (touch_watch) — LRU не вытесняет читаемый PDF.
-# 2.2: /pages — heartbeat просмотра для конвертации PDF, пока смотрят: пишет _watch.json
-#      (параметр want — страница, которую показывает вьюер) и возобновляет частичную
-#      конвертацию (resume_pdf_conversion), если она на паузе.
-# 2.1: /pages переведён на канонический validate_and_resolve_under_base() (§3);
-#      _is_safe_dirname и ручная startswith-проверка удалены;
-#      _list_png_files использует .resolve() базы для корректного relative_to.
 
 import asyncio
 import json

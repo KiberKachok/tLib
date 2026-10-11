@@ -1,5 +1,4 @@
 #!/bin/bash
-# Version 1.0 - 19.01.2026
 # Скрипт установки TlibWebApp с Caddy (Let's Encrypt HTTPS)
 # Использование: ./install_ubuntu_caddy.sh example.com [email@example.com]
 

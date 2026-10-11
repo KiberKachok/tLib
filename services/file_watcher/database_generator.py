@@ -1,11 +1,9 @@
-# Version 1.2 - 14.06.2026 13:40:00 GMT
 # File Watcher Database Generator - Генерация и проверка БД
 # Описание: Этап 5 pipeline - генерация и финальная проверка базы данных.
 #           - generate_final_database_check() финальная проверка всего батча (БД из data/ + успешные группы из processing/)
 #             с нормализацией имён для корректного исключения старых версий (предотвращение дубликатов)
 #           - generate_database_from_data() генерация БД из всех JSON файлов в data/ с дедупликацией по нормализованному id
 #           Финальная проверка страхует от редких SQLite-специфичных ошибок (~1-5%).
-# 1.2: generate_final_database_check() переведён с TEMP_DATABASE_PATH на DATABASE_NEW_FILE.
 
 from pathlib import Path
 from typing import Dict, List

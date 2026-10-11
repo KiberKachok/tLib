@@ -1,5 +1,4 @@
 #!/bin/bash
-# Version 3.0 - 19.01.2026
 # Wrapper-скрипт для запуска TlibWebApp
 # По умолчанию вызывает start_ubuntu_tailscale_funnel.sh
 #

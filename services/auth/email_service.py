@@ -1,14 +1,8 @@
-# Version 1.4 - 04.09.2026 14:25:00 GMT
 # Email service для TlibWebApp
 # Описание: Отправка magic link по email через Gmail SMTP (smtplib).
 #           Credentials читаются из config (загружаются из data.secret/.env).
 #           Паттерн отправки идентичен tests/test_smtp_gmail.py.
 #           redirect — необязательный параметр: куда вернуть пользователя после верификации.
-# Изменения v1.2: send_magic_link принимает code и включает его в текст письма
-#           (гибридная авторизация: ссылка + цифровой код).
-# 1.3: send_report_decision() — удалён параметр published и мёртвая ветка «опубликован»
-#      (публикационные письма отправляются через send_report_published в notify.py).
-# 1.4: все темы писем получили префикс MAIL_SUBJECT_PREFIX (домен из SITE_URL).
 
 import smtplib
 from email.mime.text import MIMEText

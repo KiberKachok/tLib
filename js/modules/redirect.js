@@ -1,4 +1,3 @@
-// Version 5.3 - 07.10.2026 07:00:56 GMT
 // Модуль системы редиректов и обработки URL с поддержкой истории браузера
 // Описание: Обрабатывает URL параметры для автоматического поиска по шифрам.
 //           Классы: URLParser (парсинг шифров), URLSerializer (сериализация формы в URL),
@@ -12,9 +11,6 @@
 //           со справочниками и <select> опциями. UI форма заполняется отдельно и может «догнать» значения позже.
 //           Декаплинг: вместо прямого вызова search.js/ui.js эмитирует события redirect:auto-search,
 //           redirect:form-reset и redirect:legacy-not-found.
-// 5.3: ?notfound=1 — событие redirect:legacy-not-found вместо пустой выдачи: человек видит фразу про старую
-//      ссылку, а не «Ничего не найдено», и кнопка не пишет «найдено 0» без поиска.
-// 5.2: импорт serverConfigService обновлён на js/services/.
 
 import { CONSTANTS } from '../config/constants.js';
 import { errorHandler } from '../core/errorHandler.js';

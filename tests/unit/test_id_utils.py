@@ -1,4 +1,3 @@
-# Version 1.0 - 15.06.2026 10:18:00 GMT
 # Тесты для services/id_utils.py
 # Описание: Проверяет контракты всех четырёх публичных функций модуля нормализации ID:
 #           normalize_shifr_to_5digits, normalize_dopshifr, make_norm_id, normalize_group_id.

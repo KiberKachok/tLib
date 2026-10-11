@@ -1,18 +1,8 @@
-# Version 1.4 - 20.09.2026
 # Integration tests: auth endpoints + auth_db unit-блок
 # Описание: In-process тесты для /api/auth/request-link, /api/auth/verify-code,
 #           /auth/verify, /api/auth/logout, /api/auth/me, а также unit-тесты
 #           приватных функций auth_db (_same_network, verify_magic_code, cleanup_expired).
 #           Почта заглушена через Mailbox, auth.db — во временном tmp_path.
-# Изменения v1.1: добавлены тесты для logout?all=1, пер-IP троттлинга request-link,
-#           дневного лимита EMAIL_QUOTA и email_quota функций auth_db.
-# Изменения v1.2: тест уровня URGENT для EMAIL_QUOTA; регресс-тест реальной доставки
-#           send_admin_alert(EMAIL_QUOTA) через замену threading.Thread; тест нового
-#           метода security_logger.log_email_quota_exceeded.
-# Изменения v1.3: test_send_admin_alert_email_quota_actually_fires — добавлен try/finally
-#           для очистки alerter._throttle["EMAIL_QUOTA"] после теста (изоляция состояния).
-# Изменения v1.4: TestAdminIpChange — смена подсети у админ-сессии не сбрасывает сессию,
-#           а пишет ADMIN_IP_CHANGE в security-лог и обновляет sessions.ip.
 
 from __future__ import annotations
 

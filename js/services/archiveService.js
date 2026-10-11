@@ -1,7 +1,5 @@
-// Version 1.1 - 14.06.2026
 // Описание: Сервис для работы с архивами.
 //   - openOriginal() — открывает оригинальный файл из архива в новой вкладке.
-// 1.1: удалён неиспользуемый импорт NetworkError (класс удалён из errorHandler).
 
 import { CONSTANTS } from '../config/constants.js';
 import { errorHandler } from '../core/errorHandler.js';

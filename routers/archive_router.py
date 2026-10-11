@@ -1,4 +1,3 @@
-# Version 5.0 - 10.01.2026 20:21:09 GMT
 # Archive Router для TlibWebApp
 # Описание: Тонкий HTTP-слой для работы с ZIP архивами. Предоставляет три endpoint'а:
 #           GET /api/archive/{filename}/contents - получение списка файлов в архиве с метаданными,

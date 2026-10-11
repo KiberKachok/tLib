@@ -1,9 +1,7 @@
-# Version 1.1 - 07.10.2026 06:58:05 GMT
 # Unit tests for services/database/query_builder.py, query_filters.py, query_helpers.py
 # Описание: Проверяет построение SQL-запросов и вспомогательные функции слоя поиска.
 #           Тесты чистой логики: без БД, без сервера. Используется реальный query builder
 #           с патчем DATABASE_TABLE_NAME.
-# 1.1: describe_search_form — строка заполненных полей для лога пустой выдачи.
 
 from __future__ import annotations
 

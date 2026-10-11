@@ -1,4 +1,3 @@
-# Version 1.0 - 08.02.2026 GMT
 # Data Download Middleware для TlibWebApp
 # Описание: ASGI middleware для добавления Content-Disposition: attachment с RFC 5987 кодировкой
 #           к файлам, раздаваемым через StaticFiles на пути /data/.

@@ -1,4 +1,3 @@
-# Version 1.1 - 19.02.2026 00:00:00 GMT
 # HTTP Cache Utilities для TlibWebApp
 # Описание: Общие утилиты для HTTP кеш-валидаторов (ETag / Last-Modified / условные запросы).
 #           Используется в archive_router и pdf_router для поддержки ETag, Last-Modified и 304.

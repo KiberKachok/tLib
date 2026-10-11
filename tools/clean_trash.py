@@ -1,11 +1,7 @@
-# Version 1.3 - 22.06.2026 18:24:00 GMT
 # Утилита очистки регенерируемого «мусора» проекта.
 # Зачем: по триггерам «покажи мусор» / «очисти мусор» безопасно найти и удалить
 #        кеши Python (__pycache__/, .pytest_cache/) по всему дереву, файлы в logs/
 #        и артефакты прогонов E2E-тестов (tests/playwright-report/, tests/test-results/).
-# 1.3: добавлена очистка артефактов Playwright (playwright-report, test-results).
-# 1.2: logs/ не удаляется — очищаются только файлы внутри каталога.
-# 1.1: onerror для shutil.rmtree — снимает read-only на Windows (Google Drive и т.п.).
 """
 clean_trash.py — Поиск и удаление регенерируемых временных артефактов проекта.
 

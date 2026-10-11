@@ -1,10 +1,6 @@
-// Version 1.10 - 10.07.2026
 // Описание: Форматирует строки результатов для UI. Генерирует HTML для ячеек таблицы и ссылки для автопоиска, нормализует шифры и даты.
 //           Применяет escapeHtml для защиты от DOM-XSS при вставке данных из БД.
 //           Применяет validateResourceUrl для защиты href от javascript:/data:/внешних URL при компрометации источника данных.
-// 1.10: buildRowDownloadInfo — hasFile учитывает row["Скрыт"] (скрытые отчёты администратором:
-//       ссылка/иконка скачивания гаснут, как при отсутствии файла).
-// 1.8: удалён неиспользуемый static getArchiveSize() и устаревший JSDoc-фрагмент после него.
 
 import { CONSTANTS, MONTHS_RU } from '../../config/constants.js';
 import { appState } from '../../core/appState.js';

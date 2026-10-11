@@ -1,4 +1,3 @@
-# Version 1.4 - 18.09.2026 07:50:00 GMT
 # Config Router для TlibWebApp
 # Описание: API endpoint для получения конфигурации сервера клиентом.
 #           GET /api/config возвращает критичные настройки из config/,
@@ -11,8 +10,6 @@
 #           - mimeTypes (MIME_TYPES, ключи без точек)
 #           - notice (текст объявления из data.secret/site_notice.json)
 #           Устраняет дублирование конфигурации между Python и JavaScript.
-# 1.4: добавлен notice — объявление в левой колонке (файл вне git).
-# 1.3: добавлен paths.pcloudData для cloud.html.
 
 from fastapi import APIRouter
 

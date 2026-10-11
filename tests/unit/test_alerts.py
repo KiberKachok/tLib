@@ -1,10 +1,6 @@
-# Version 1.3 - 23.09.2026 10:15:00 GMT
 # Unit tests for services/alerts/
 # Описание: Тесты парсера critical.log, форматирования писем,
 #           логики троттлинга и сборки дайджеста. SMTP не вызывается (замокан).
-# Изменения v1.2: test_subject_prefix_tlib -> test_subject_prefix_domain/test_subject_prefix_reflects_domain
-#           (тема письма использует MAIL_SUBJECT_PREFIX — домен из SITE_URL — вместо хардкода "[tLib]").
-# Изменения v1.3: строка зеркала pCloud в дайджесте (нет метки / свежая / устаревшая).
 
 from __future__ import annotations
 

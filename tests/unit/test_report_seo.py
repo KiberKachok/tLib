@@ -1,4 +1,3 @@
-# Version 1.2 - 16.06.2026 22:00:00 GMT
 # Unit tests for services/seo/report_seo.py
 # Описание: Проверяет чистые функции SEO-модуля:
 #           parse_report_query, build_canonical_query, build_title, build_description,
@@ -6,8 +5,6 @@
 #           build_route_html (microdata schema.org),
 #           _extract_title_description (единый источник title/description из HTML).
 #           Без БД и сервера — только чистая логика строк.
-# 1.2: добавлены TestExtractTitleDescription; og:image:width/height в TestSeoHeadHtml.
-# 1.1: добавлены TestSeoHeadHtml (OG + canonical) и TestBuildRouteHtmlMicrodata.
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-# Version 1.1 - 12.06.2026 19:00:00 GMT
 # Unit tests for services/validation/
 # Описание: Проверяет чистые функции валидации данных:
 #           - json_schema_validation_service: validate_json_data, read_json_file, extra-fields warning, BOM

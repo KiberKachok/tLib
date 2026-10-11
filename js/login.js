@@ -1,10 +1,7 @@
-// Version 1.5 - 21.06.2026
 // Login page JS для TlibWebApp
 // Описание: Magic link + цифровой код авторизации.
 //           Состояния: загрузка → форма email → форма кода → авторизован.
 //           При загрузке страницы проверяет /api/auth/me и переключает состояние.
-// Изменения v1.4: убран no-op 'use strict' (ESM-модуль — strict включён всегда).
-// Изменения v1.5: кнопка «Выйти» заменена dropdown-меню (выход / выход со всех устройств).
 
 import { getCurrentUser, requestLink, verifyCode, logout } from './services/authService.js';
 import { attachLogoutMenu } from './modules/logoutMenu.js';

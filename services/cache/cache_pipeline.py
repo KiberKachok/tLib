@@ -1,20 +1,7 @@
-# Version 2.5 - 07.10.2026 06:05:27 GMT
 # Cache Pipeline для TlibWebApp
 # Описание: Конвертационные шаги подготовки кеша.
 #           Извлечение, конвертация PDF/изображений/GPS, запись meta.
 #           Вызывается из cache_prepare_service.
-# 2.1: конвертация PDF, пока смотрят — PDF на паузе пишется в meta со status=partial
-#      и pages_done; хелперы докрутки extract_single_member, find_pdf_entry,
-#      first_partial_png_dir, update_meta_file_entry. convert_pdfs сопоставляет пути в posix,
-#      как convert_images, — иначе на Windows вложенные PDF не находились в files_info.
-# 2.2: first_partial_png_dir удалён — /prepare больше не докручивает PDF на паузе.
-#      Результат конвертера — (pages_done, page_count, rendered, completed).
-# 2.3: cache_size_bytes не учитывает _work/, lockdir и _prepare.json — докрутка считала размер,
-#      пока перераспакованный PDF лежал в _work/. write_meta* возвращают размер для ensure_cache_space.
-# 2.4: стадия картинок перед каждой картинкой дорисовывает окно PDF на паузе со свежим heartbeat
-#      (render_watched_pdfs): lock архива держит подготовка, и докрутка ждала бы все фото.
-#      convert_pdfs больше не удаляет временный PDF — он нужен стадии картинок и уходит вместе с _work/.
-# 2.5: гистерезис render_watched_pdfs — cache_watch.needs_resume, общий с докруткой и /pages.
 
 import shutil
 import zipfile

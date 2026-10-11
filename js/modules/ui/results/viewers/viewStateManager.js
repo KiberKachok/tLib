@@ -1,4 +1,3 @@
-// Version 1.0 - 20.02.2026 - Зона 2: выделен из viewerHelpers.js и pdfViewer.js
 // Описание: Централизованное управление hash URL state и памятью страниц PDF.
 //   Единственное место для: HASH_PARAMS, parse/build/replace hash, pdfPageMemory,
 //   postMessage-синхронизация страницы PDF.

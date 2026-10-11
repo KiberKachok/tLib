@@ -1,16 +1,5 @@
-# Version 1.4 - 16.06.2026 22:00:00 GMT
 # SEO-модуль для TlibWebApp
 # Описание: Единственный источник истины «компактный URL отчёта».
-# 1.4: единый источник title/description — HTML-шаблоны (index.html, about.html);
-#           питоновские константы _HOMEPAGE_*/_ABOUT_* удалены.
-#           _extract_title_description — извлечение заголовка и описания из шаблона.
-#           _build_og_image_meta — og:image + og:image:width + og:image:height;
-#           OG_IMAGE_PATH/OG_IMAGE_WIDTH/OG_IMAGE_HEIGHT вынесены в config.
-# 1.3: render_homepage_html — теперь подставляет canonical + Open Graph в SEO_HEAD (не отдаёт шаблон как есть).
-#           render_about_html — новая функция для about.html с canonical + OG + description.
-#           _build_seo_head_html — добавлены og: мета-теги для отчётов.
-#           build_route_html — добавлена microdata schema.org/CreativeWork (невидимые <meta itemprop>).
-# 1.2: удалена неиспользуемая invalidate_template_cache() — кеш живёт до перезапуска сервера.
 #           parse_report_query — распознаёт компактный URL (regex + паддинг),
 #             работает по декодированной query-строке целиком; ДопШифр передаётся
 #             без нормализации — регистронезависимость обеспечивает fetch_report_row.
@@ -22,6 +11,8 @@
 #           build_title/build_description/build_route_html — мирроринг renderSingleResultFormatted
 #             (js/modules/ui/results/single.js) и форматтеров DataFormatter (js/modules/ui/dataFormatter.js).
 #           render_report_html — подстановка SEO_HEAD и SEO_CONTENT зон для отчёта.
+#           render_homepage_html / render_about_html — index.html и about.html с canonical + Open Graph;
+#             title и description берутся из самих шаблонов.
 #           Использует SITE_URL из config для canonical и sitemap (та же константа, что и в auth/notify).
 #           Все данные из БД экранируются через html.escape (защита от XSS).
 
@@ -72,6 +63,8 @@ def _extract_title_description(template: str) -> tuple[str, str]:
 # Кеш шаблонов
 # ---------------------------------------------------------------------------
 
+# Кеш живёт до перезапуска сервера: правка index.html или about.html видна только после
+# рестарта, заливка фронта без рестарта (push_test.ps1 -Front) её не покажет.
 _template: str | None = None
 _homepage_cache: bytes | None = None
 _about_template: str | None = None

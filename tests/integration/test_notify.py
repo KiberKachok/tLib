@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 20:00:00 GMT
 # Integration tests: services/file_watcher/notify.py
 # Описание: Проверяет process_pending_notifications() — обработку .notify-маркеров.
 #           Все константы и email-функции мокаются через monkeypatch на модуль notify,

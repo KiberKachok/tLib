@@ -1,16 +1,5 @@
-# Version 2.6 - 01.10.2026 14:35:00 GMT
 # Upload Router для TlibWebApp
 # Описание: Тонкий HTTP-слой API загрузки отчётов. Вся бизнес-логика — в services/upload/upload_service.py.
-# 2.6: пустой ДопШифр в submit и submit-edit остаётся пустым (дефолт Form("") вместо TLIB).
-# 2.5: новый GET /api/upload/my-reports — список опубликованных отчётов текущего
-#      пользователя для раздела «Мои отчёты» (доступен всем авторизованным).
-# 2.0: роутер сокращён до валидации входа + auth-check + вызов сервиса; бизнес-логика вынесена.
-# 2.1: read-модели staged_item/published_item вынесены в upload_service (read_staged_item, read_published_item).
-# 2.2: published-item убирает служебный ключ zagruzil_id из ответа через model.pop() (восстановлен исходный JSON-контракт).
-# 2.3: await file.read() заменён потоковой записью через stream_upload_to_temp (защита RAM);
-#      disk-guard в submit/submit-edit (507 при нехватке места); новый GET /api/upload/status.
-# 2.4: _disk_full_response — немедленный URGENT-алерт DISK_LOW при блокировке аплоада
-#      (троттлинг 30 мин встроен в send_admin_alert; /status алерт не шлёт).
 #
 #   GET  /api/upload/next-code          — первый свободный N для дефолтного шифра N-TLIB
 #   GET  /api/upload/check-code         — проверка уникальности Шифр-ДопШифр (+ can_edit для опубликованных)

@@ -1,4 +1,3 @@
-# Version 1.0 - 14.05.2026 00:00:00 GMT
 # Unit tests for services/file_watcher/deleter.py
 # Описание: Проверяет контракт process_delete_operation() после рефакторинга на единый
 #           канал записи в БД. Функция больше не трогает БД — только переносит файлы

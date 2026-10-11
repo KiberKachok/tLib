@@ -1,18 +1,6 @@
-# Version 1.6 - 29.09.2026 16:49:58 GMT
 # Конфигурация безопасности TlibWebApp
 # Описание: CSP политики, заголовки безопасности, HTTP методы, rate limiting,
 #           паттерны детекции атак и ограничения размеров файлов.
-# Изменения v1.1: добавлены AUTH_CODE_LENGTH, AUTH_CODE_MAX_ATTEMPTS для гибридной авторизации.
-# Изменения v1.2: X-XSS-Protection -> 0 (легаси-аудитор отключён, защита через CSP);
-#                 AUTH_COOKIE_SECURE по умолчанию true (fail-secure).
-# Изменения v1.3: AUTH_EMAIL_DAILY_CAP, AUTH_REQUEST_LINK_IP_MAX, AUTH_REQUEST_LINK_IP_WINDOW
-#                 для анти-абуз системы request-link (дневной лимит + пер-IP троттлинг).
-# Изменения v1.4: UPLOAD_READ_CHUNK_SIZE — размер чанка потоковой записи upload-файлов;
-#                 UPLOAD_DISK_RESERVE_MULTIPLIER — резерв свободного места для блокировки загрузок.
-# Изменения v1.5: MAIL_SUBJECT_PREFIX — префикс темы всех писем на основе домена из SITE_URL
-#                 (единый источник для всех хостингов, вместо хардкода "[tLib]").
-# Изменения v1.6: '/cache/' в RATE_LIMIT_LIGHT_STATIC_PATHS — PNG-страницы PDF-вьюера
-#                 без concurrent-лимита.
 
 # ==================== RATE LIMITING ====================
 

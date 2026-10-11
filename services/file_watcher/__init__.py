@@ -1,4 +1,3 @@
-# Version 2.4 - 14.05.2026 00:00:00 GMT
 # File Watcher Package
 #
 # Текущая функциональность:

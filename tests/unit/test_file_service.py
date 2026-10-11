@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 18:00:00 GMT
 # Unit tests for services/file_service.py
 # Описание: Проверяет функции работы с именами файлов из ZIP-архивов:
 #           decode_zip_filename (порядок ZIP_ENCODINGS, кракозябры CP437 → кириллица),

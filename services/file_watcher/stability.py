@@ -1,4 +1,3 @@
-# Version 1.0 - 17.04.2026 00:00:00 GMT
 # File Watcher Stability - Групповой stability-window
 #
 # Назначение: отслеживать стабильность файлов в data.up/20_go/ между тиками сканирования.

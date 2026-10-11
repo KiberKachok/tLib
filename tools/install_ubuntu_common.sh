@@ -1,5 +1,4 @@
 #!/bin/bash
-# Version 1.0 - 19.01.2026
 # Общие функции для скриптов установки TlibWebApp на Ubuntu Server 24.04
 # Этот файл импортируется (source) в install_ubuntu_*.sh скрипты
 

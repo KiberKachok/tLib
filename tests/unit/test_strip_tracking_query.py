@@ -1,10 +1,8 @@
-# Version 1.1 - 22.09.2026 11:05:00 GMT
 # Unit tests for routers/static_router.py::_strip_tracking_query
 # Описание: Проверяет вырезание меток ROBOTS_CLEAN_PARAMS из сырой query
 #           и снятие хвостового «=» у компактного шифра (3725= от Яндекса)
 #           без перекодирования оставшихся сегментов.
 #           None — вырезать нечего, повторный проход редиректа не даёт.
-# 1.1: 3725= без меток и 3725=&ysclid=… → 3725; допшифр с «=» сохраняет кодировку.
 
 from routers.static_router import _strip_tracking_query
 

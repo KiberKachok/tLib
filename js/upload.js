@@ -1,22 +1,5 @@
-// Version 3.6 - 01.10.2026 16:26:49 GMT
-// Изменения v3.6: гонка next-code — поздний ответ loadDefaultCode() игнорируется вне режима 'new';
-//                 applyAuthenticatedState() заполняет «Загрузил» до await, а не после
-//                 (иначе открытый из очереди отчёт получал шифр next-code и админа как загрузившего).
-// Изменения v3.5: удалено поле ИмяФайла — имя архива строится из ID и archive_ext.
 // Логика страницы загрузки отчётов (upload.html)
 // Единая форма, три режима: 'new' (загрузка), 'edit' (модерация 10_up), 'edit_published' (правка опубликованного).
-// Изменения v3.4: раздел «Скрытые отчёты» (только админ) — loadHiddenReports/initHiddenReportsBlock,
-//                 GET/POST /api/admin/hidden-reports; кнопка «Сохранить» активна только при изменении текста.
-// Изменения v2.9: переведён на authService (getCurrentUser/requestLink/verifyCode/logout).
-// Изменения v3.0: кнопка «Выйти» заменена dropdown-меню (выход / выход со всех устройств).
-// Изменения v3.1: _checkUploadStatus() — проверка /api/upload/status при показе формы;
-//                 баннер #upload-disk-banner + скрытие формы при uploads_enabled=false;
-//                 обработка 507 (disk full) в doSubmitNew/doSubmitEdit.
-// Изменения v3.2: раздел «Мои отчёты» (loadMyReports/initMyReportsCollapse) — список
-//                 опубликованных отчётов текущего пользователя, кнопка «Редактировать»
-//                 открывает enterEditPublishedMode; обновляется в resetFormToNew().
-// Изменения v3.3: устранено дублирование SVG-иконки скачивания — DL_ICON_SVG + dlIconLink()
-//                 вместо трёх идентичных инлайн-блоков в loadStagedList/loadMyReports.
 
 import { getCurrentUser, requestLink, verifyCode, logout } from './services/authService.js';
 import { attachLogoutMenu } from './modules/logoutMenu.js';

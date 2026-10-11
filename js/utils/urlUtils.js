@@ -1,4 +1,3 @@
-// Version 1.0 - 20.02.2026
 // Описание: Утилиты для работы с URL. Объединяет hashUtils (парсинг window.location.hash)
 //           и shareUrl (формирование share-URL с RFC3986-совместимым кодированием).
 

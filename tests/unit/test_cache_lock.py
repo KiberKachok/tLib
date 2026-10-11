@@ -1,10 +1,8 @@
-# Version 1.1 - 30.09.2026 16:20:00 GMT
 # Тесты lock подготовки кеша (services/cache/cache_prepare_service._acquire_lock)
 # Описание: Осиротевший lock — lockdir без _prepare.json старше CACHE_STALE_LOCK_TIMEOUT_MINUTES —
 #           снимается и захватывается заново; свежий lock и lock живой подготовки (_prepare.json
 #           есть) остаются занятыми. Без этого сирота после рестарта вечно блокировал бы
 #           подготовку и докрутку PDF архива.
-# 1.1: lock, снятый владельцем между попыткой захвата и проверкой возраста, берётся сразу без WARNING.
 
 import json
 import logging

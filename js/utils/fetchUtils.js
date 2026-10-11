@@ -1,4 +1,3 @@
-// Version 2.0 - 26.02.2026
 // Описание: Утилиты для HTTP-запросов с поддержкой retry и таймаута.
 //           fetchJson: базовая проверка HTTP-статуса + парсинг JSON, retry с exponential backoff, timeout через AbortController.
 //           fetchApiJson: дополнительная проверка поля success в ответе API.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Version 1.0 - 22.06.2026 11:00:00 GMT
 # Утилита CLI-управления пользователями auth.db (break-glass дополнение к web /admin).
 """
 Утилита управления пользователями tLib.

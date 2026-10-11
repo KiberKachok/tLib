@@ -1,9 +1,3 @@
-// Version 1.5 - 11.10.2026 09:17:47 GMT
-// 1.5: пока resolvePdfViewer ждёт жеста (кеша нет), на месте спиннера — кнопка «Открыть отчёт»:
-//   человек, открывший deep-link и не тронувший мышь, видел бесконечное «Загрузка...».
-// 1.4 - 30.09.2026 - png-viewer стартует только для видимого PDF (autoLoad; при deep-link — PDF
-//   из file в hash), скрытые — при выборе ссылки (selectLink): каждый запущенный вьюер опрашивает /pages
-//   и держит heartbeat своего PDF
 // Описание: Viewer-стратегия для PDF (PNG viewer). Реализует контракт viewer-стратегии:
 //   buildFileListHtml, buildViewersHtml, setupHandlers, selectLink, autoLoad,
 //   applyHashState, getHashStateOnTabSwitch.

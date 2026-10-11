@@ -1,11 +1,8 @@
-# Version 1.3 - 23.09.2026 12:20:00 GMT
-# 1.3: reindex — успех в data.new, исключение при сборке и прерванный рестарт в 40_error.
 # Integration tests: File Watcher pipeline сквозные сценарии
 # Описание: Проверяет process_upload_cycle() на реальной файловой системе в tmp-директориях.
 #           Патчит config.* (ленивые импорты внутри функций) и services.file_watcher.pipeline.*
 #           (module-level импорты на старте модуля). stability._observations сбрасывается перед
 #           каждым тестом для изоляции.
-# 1.2: monkeypatch переведён с TEMP_DATABASE_PATH на DATABASE_NEW_FILE.
 
 from __future__ import annotations
 

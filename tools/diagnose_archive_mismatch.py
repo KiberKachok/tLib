@@ -1,6 +1,4 @@
-# Version 1.1 - 15.06.2026 10:18:00 GMT
 # Диагностика расхождения между data/ и tlib.db.
-# 1.1: normalize_stem и make_db_id -> делегаты services.id_utils (устранён дубль нормализации ID).
 """
 diagnose_archive_mismatch.py — Диагностика расхождения между файлами в data/ и tlib.db.
 

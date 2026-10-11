@@ -1,20 +1,6 @@
-# Version 1.8 - 07.10.2026 06:08:09 GMT
 # Конфигурация кеша TlibWebApp
 # Описание: Имена файлов и директорий кеша, статусы, стадии подготовки,
 #           таймауты и параметры LRU-очистки.
-# 1.1: CACHE_RESOLVE_KINDS — допустимые kind у /api/cache/{name}/resolve (pdf убран).
-# 1.2: конвертация PDF, пока смотрят — PNG_WATCH_FILENAME, PNG_PAGES_TOTAL_FILENAME,
-#      PDF_CONVERT_IDLE_TIMEOUT_SECONDS, CACHE_FILE_STATUS_PARTIAL.
-# 1.3: рендер PDF по окну просмотра — PDF_CONVERT_PREWARM_PAGES, PDF_CONVERT_LOOKAHEAD_PAGES;
-#      PDF_CONVERT_IDLE_TIMEOUT_SECONDS — только критерий свежести heartbeat.
-# 1.4: удалены CACHE_ZIP_SIZE_MULTIPLIER и CACHE_PDF_SIZE_MULTIPLIER — место освобождается
-#      по фактическому размеру папки после записи _meta.json, а не по оценке.
-# 1.5: комментарии к heartbeat и окну — опрос раз в 1–2 с, дозаполнение позади want (значения прежние).
-# 1.6: PDF_CONVERT_BACKFILL_FRESH_SECONDS — дозаполнение позади want только при свежем (≤ 5 с) heartbeat.
-# 1.7: long-poll /pages — PNG_PAGES_WAIT_SECONDS, PNG_PAGES_WAIT_STEP_SECONDS; соседи want рендерятся
-#      вперемешку с обеих сторон — PDF_CONVERT_NEAR_PAGES.
-# 1.8: комментарии к окну и дозаполнению — вьюер опрашивает /pages, пока сервер рисует для want
-#      (rendering в ответе), иначе — при смене страницы (значения прежние).
 
 # ==================== ФАЙЛЫ И ДИРЕКТОРИИ КЕША ====================
 

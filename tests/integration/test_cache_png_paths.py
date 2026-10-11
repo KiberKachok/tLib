@@ -1,28 +1,8 @@
-# Version 2.3 - 09.10.2026 10:20:00 GMT
 # Тесты безопасности путей cache_router и png_viewer_router (этап 4)
 # Описание: Проверяет, что traverse-векторы в archive_name, body.path и dir_path
 #           корректно отклоняются (400), а легитимные пути работают (не 400/500).
 #           In-process TestClient; CACHE_DIRECTORY и DATA_DIRECTORY подменяются
 #           на tmp-директории через monkeypatch.
-# 1.1: усилены ассерты test_resolve_empty_path_not_rejected и
-#      test_resolve_valid_nested_path_not_rejected (stub-zip -> авто-триггер prepare -> 200).
-# 1.2: тест атрибуции IP/endpoint в _validate_archive_name (spy на security_logger).
-# 1.3: /prepare?probe=1 — проба не запускает подготовку кеша (TestCachePrepareProbe).
-# 1.4: kind=pdf убран из /resolve — traversal-проверки переведены на kind=image,
-#      добавлен TestCacheResolveKind (pdf и неизвестный kind -> 400 без запуска подготовки).
-# 1.5: TestConvertWhileWatching — /pages?want= пишет _watch.json, partial-директория
-#      запускает resume_pdf_conversion, /prepare?probe=1 не отдаёт pages для partial.
-# 1.6: /pages обновляет mtime папки архива (LRU-метка просмотра PDF).
-# 1.7: /prepare при валидном кеше больше не докручивает PDF на паузе — триггер докрутки
-#      только /pages (spy resume_pdf_conversion — только в png_viewer_router).
-# 1.8: /prepare?probe=1 отдаёт pages и для PDF на паузе — вьюер открывается без жеста.
-# 1.9: /pages пишет «PDF page wait», только пока страницы want нет на диске.
-# 2.0: long-poll /pages — ответ, как только PNG want появился, или по PNG_PAGES_WAIT_SECONDS;
-#      «PDF page wait» с waited_ms и ready; готовая директория и готовая want — без ожидания.
-# 2.1: test_pages_on_partial_dir_resumes_conversion без long-poll (WAIT=0) — проверяет докрутку, не ожидание.
-# 2.2: поле rendering в /pages — идёт подготовка архива или нужна докрутка по гистерезису (needs_resume);
-# 2.3: rendering=false и докрутка не ставится, если исходника нет, запись не partial или нет meta.
-#      готовая директория и директория без маркера — false.
 
 from __future__ import annotations
 

@@ -1,12 +1,6 @@
-# Version 1.4 - 23.09.2026 09:30:00 GMT
 # Конфигурация базы данных и File Watcher TlibWebApp
 # Описание: Настройки SQLite БД, бэкапов, staged pipeline File Watcher,
 #           параметры тяжёлых запросов и лимиты валидации данных.
-# 1.1: добавлена константа UPLOAD_TLIB_START_NUMBER.
-# 1.2: удалена дубль-константа TEMP_DATABASE_PATH (оставлена DATABASE_NEW_FILE как единственный триггер).
-# 1.3: добавлена PCLOUD_DATA_BASE_URL для столбца pCloud в XLSX-экспорте.
-# 1.4: добавлены PCLOUD_SYNC_OK_FILENAME и PCLOUD_SYNC_STALE_HOURS — статус
-#      зеркала pCloud (внешний systemd-таймер, doc/DEPLOY.md) в админ-панели.
 
 # ==================== БАЗА ДАННЫХ ====================
 

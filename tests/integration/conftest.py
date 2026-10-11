@@ -1,16 +1,5 @@
-# Version 1.7 - 21.06.2026
 # Conftest для integration-тестов TlibWebApp
 # Описание: Фикстуры для in-process тестирования auth и upload роутеров без сервера и почты.
-# Изменения v1.1: удалён workaround multipart (конфликт устранён через .venv).
-# 1.3: мок capture_report_decision — удалён параметр published (сигнатура приведена к новой).
-# Изменения v1.2: монкейпатчи перенаправлены на services.upload.upload_service и
-#                 services.auth.session_helpers (после выноса бизнес-логики из upload_router).
-# Изменения v1.4: autouse-фикстура http_cookie_secure отключает Secure-флаг cookie для
-#                 in-process TestClient (http://), после того как AUTH_COOKIE_SECURE стал True по умолчанию.
-# Изменения v1.5: autouse-фикстура reset_ip_throttle очищает in-memory словарь пер-IP троттлинга
-#                 между тестами, чтобы счётчик не накапливался между запросами.
-# Изменения v1.7: Mailbox.capture_admin_alert + заглушка send_admin_alert в upload_router_module
-#                 (фикстура mailbox), чтобы disk-guard алерты перехватывались в тестах.
 
 from __future__ import annotations
 

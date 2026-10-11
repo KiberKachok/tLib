@@ -1,4 +1,3 @@
-# Version 2.0 - 06.01.2026 20:29:42 GMT
 # JSON Converter Service для TlibWebApp
 # Описание: Сервис для конвертации JSON отчетов в SQLite базу данных.
 #           Получает список JSON файлов (директория или явный список), валидирует их по JSON Schema (assets/schema.json)

@@ -1,4 +1,3 @@
-# Version 1.0 - 10.07.2026 09:45:00 GMT
 # Тесты для services/hidden_reports.py
 # Описание: Проверяет разбор/нормализацию списка «Шифр-ДопШифр» из textarea (parse_and_normalize)
 #           и формирование текста для сохранения/отображения (format_for_storage).

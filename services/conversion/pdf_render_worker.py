@@ -1,4 +1,3 @@
-# Version 1.0 - 03.10.2026 09:36:10 GMT
 # PDF Render Worker для TlibWebApp
 # Описание: Функции процесса-воркера рендера PDF→PNG (ProcessPoolExecutor из pdf_to_png_service).
 #           PyMuPDF держит GIL весь get_pixmap/tobytes (~0,5–1,3 с на страницу): рендер в потоке

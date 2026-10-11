@@ -1,38 +1,8 @@
-# Version 2.10 - 11.10.2026 09:36:16 GMT
 # Cache Prepare Service для TlibWebApp
 # Описание: Централизованный сервис подготовки кеша архивов.
 #           Единственный владелец _prepare.json и lock-логики.
 #           Поддерживает eager caching с per-file readiness.
 #           Работает единообразно для ZIP архивов и standalone PDF.
-# 2.1: конвертация PDF, пока смотрят. PDF на паузе остаётся в meta со status=partial,
-#      resume_pdf_conversion докручивает его с недостающих страниц (без purge готовых PNG).
-#      record_cache_prepared — только когда в meta не осталось partial (без двойного счёта).
-# 2.2: сбой докрутки закрывает директорию на готовых страницах (_pages_total.txt и pages
-#      в meta = числу PNG): она перестаёт быть частичной, опрос вьюера не ставит холостую
-#      докрутку, вьюер не ждёт недостающих страниц. Поле partial в «Cache prepared successfully».
-# 2.3: рендер PDF по окну просмотра. resume_pdf_conversion выходит без lock и распаковки, пока
-#      впереди от просматриваемой страницы готова половина окна (гистерезис); место под докрутку
-#      оценивается по окну, а не по всему PDF; в «PDF conversion resumed» — rendered.
-#      record_cache_prepared — всегда при записи _meta.json подготовкой (partial тоже считается),
-#      докрутка не считается: иначе отчёт, дочитанный до конца, учитывался бы дважды.
-# 2.4: место в кеше освобождается не по оценке «источник × множитель» до работы, а в конце
-#      запуска — ensure_cache_space(cache_size_bytes) после записи _meta.json, по факту.
-#      В подготовке — после лога и счётчика «В кэш»: сбой обхода не маскирует готовый кеш.
-# 2.5: _acquire_lock снимает осиротевший lock — lockdir без _prepare.json старше
-#      CACHE_STALE_LOCK_TIMEOUT_MINUTES (рестарт между захватом lock и записью статуса или между
-#      удалением статуса и снятием lock) — и захватывает заново; WARNING «Orphaned cache lock removed».
-#      Lock, снятый владельцем между попыткой захвата и проверкой возраста, берётся сразу без WARNING.
-# 2.6: extract_ms (перераспаковка PDF из ZIP, 0 для standalone) в «PDF conversion resumed».
-#      Гистерезис докрутки видит и дырки позади want (окно cache_watch 1.5).
-# 2.7: ensure_cache_space — в thread pool: обход кеша и shutil.rmtree при вытеснении
-#      блокировали цикл событий напрямую.
-# 2.8: гистерезис докрутки — cache_watch.needs_resume: по тому же правилу /pages отдаёт вьюеру
-#      rendering, и вьюер не опрашивает, когда докрутка не нужна.
-# 2.9: предусловия докрутки (meta валидна, запись partial, исходник на месте) — одна функция
-#      resumable_pdf_entry для докрутки и поля rendering в /pages. Иначе вьюер опрашивал бы
-#      /pages, когда докрутка заведомо выходит, не начав.
-# 2.10: prepare_ms в «Cache prepared successfully» — от захвата lock до записи _meta.json (распаковка, GPS,
-#       первые страницы PDF, картинки). Отделяет работу сервера от ожидания жеста в access-логе.
 
 import os
 import json

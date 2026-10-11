@@ -1,18 +1,8 @@
-# Version 1.7 - 23.09.2026 12:30:00 GMT
-# 1.7: состояние реиндексации — поле reindex в /api/admin/status; /api/admin/reindex-status удалён.
 # Integration tests: admin endpoints
 # Описание: In-process smoke-тесты для /api/admin/* и /admin.
 #           Проверяют: 401 без сессии, 401 для обычного пользователя,
 #           200 для администратора на ключевых endpoint.
 #           Использует фикстуры из integration/conftest.py; auth_db_path патч применяется там.
-# 1.1: DATABASE_PATH и DATA_DIRECTORY патчатся в status_service (перенесены из admin_router).
-# 1.2: smoke-тесты панели управления пользователями (users, sessions, activate/deactivate/delete).
-# 1.3: тесты ROOT_ADMIN_EMAIL 403 для deactivate и delete.
-# 1.4: удалены delete-тесты (эндпоинт убран, удаление только через CLI).
-# 1.5: тесты кнопки «Выйти» — is_current в сессиях, 403 на свою сессию, удаление чужой, 401.
-# 1.6: удалены тесты /api/admin/sessions и /sessions/delete (эндпоинты убраны);
-#      добавлены тесты новых полей /api/admin/users (is_root, is_self, last_login_ip, active_session_count)
-#      и нового эндпоинта POST /api/admin/users/logout (завершение сессий; своя сессия сохраняется).
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-# Version 1.2 - 30.12.2025 07:48:27 GMT
 # Middlewares package для TlibWebApp
 # Описание: Пакет содержит все middleware компоненты приложения
 # - path_security.py: Детекция Path Traversal атак

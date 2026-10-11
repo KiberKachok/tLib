@@ -1,13 +1,9 @@
-# Version 1.3 - 22.09.2026 13:57:00 GMT
 # Health Check Router для TlibWebApp
 # Описание: Endpoint для мониторинга состояния приложения. Используется Docker, Kubernetes, load balancer'ами
 #           для проверки работоспособности сервиса. Выполняет проверку доступности базы данных (SQLite),
 #           состояния фоновых задач (database_watcher_task, file_watcher_task).
 #           Возвращает три статуса: healthy (все работает), degraded (БД работает, задачи упали),
 #           unhealthy (БД недоступна). HTTP статус 503 при unhealthy для корректной работы load balancer.
-# 1.1: подключение к БД переведено на open_tlib_db() (read-only).
-# 1.2: /health не раскрывает путь к БД и детали ошибок (общие сообщения; детали — в app_logger).
-# 1.3: /health принимает HEAD — мониторинг через curl -I не получает 405.
 
 import sqlite3
 from datetime import datetime, timezone

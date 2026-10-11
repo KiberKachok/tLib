@@ -1,7 +1,5 @@
-// Version 1.1 - 15.06.2026
 // Описание: Утилиты для файлов: категоризация по расширению, форматирование размеров,
 //           генерация ссылок nakarte.me, формирование имён окон браузера.
-//           Выделено из archive.js (Version 2.12).
 
 import { CONSTANTS } from '../config/constants.js';
 import { validateResourceUrl } from '../utils/sanitize.js';

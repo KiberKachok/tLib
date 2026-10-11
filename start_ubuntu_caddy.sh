@@ -1,5 +1,4 @@
 #!/bin/bash
-# Version 1.0 - 19.01.2026
 # Скрипт запуска FastAPI приложения TlibWebApp с Caddy reverse proxy
 # Запускает FastAPI на localhost:8080, проверяет статус Caddy
 # Обработка сигналов для корректного завершения работы

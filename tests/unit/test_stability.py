@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 18:00:00 GMT
 # Unit tests for services/file_watcher/stability.py
 # Описание: Проверяет стейт-машину stability-window:
 #           observe/prune/is_stable/is_group_stable,

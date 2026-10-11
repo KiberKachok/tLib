@@ -1,10 +1,8 @@
-# Version 1.1 - 07.10.2026 06:56:44 GMT
 # Конфигурация полей данных TlibWebApp
 # Описание: Содержит всю конфигурацию, связанную с полями данных: справочники для dropdown,
 #           поля для валидации кодировки, поля для определения лёгкости запросов.
 #           ВАЖНО: Синхронизировать с assets/schema.json при изменении структуры данных.
 #           Поля с "description": "упорядоченный список" в schema.json должны быть в REFERENCE_FIELDS.
-# 1.1: SEARCH_FORM_FIELDS и SEARCH_LOG_VALUE_MAX_LENGTH — заполненные поля пустой выдачи в логе поиска.
 
 from .app import STATE_KATEGORIA_UNIFIED, STATE_REPORTS_COUNT
 

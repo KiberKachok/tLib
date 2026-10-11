@@ -1,4 +1,3 @@
-# Version 1.0 - 26.07.2026 09:00:00 GMT
 # Unit tests for services/file_watcher/file_operations.py
 # Описание: Проверяет canonicalize_json_dopshifr — канонизацию поля ДопШифр в JSON к UPPERCASE.
 

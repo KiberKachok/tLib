@@ -1,4 +1,3 @@
-# Version 1.3 - 14.06.2026 13:40:00 GMT
 # File Watcher Publisher - Публикация результатов и очистка
 # Описание: Этапы 6-7 pipeline - публикация результатов обработки и очистка директорий.
 #           - move_group_to_done() перемещает успешные группы из 30_processing/ в data.new/
@@ -6,7 +5,6 @@
 #           - publish_database() публикует БД (tlib-new.db → assets/tlib-new.db)
 #           - cleanup_done_directory() автоудаление файлов из data.new/ (если AUTO_DELETE_DONE_FILES=True)
 #           Все перемещения используют shutil.move() для совместимости с cross-device (разные тома/ФС).
-# 1.3: publish_database() переведён с TEMP_DATABASE_PATH на DATABASE_NEW_FILE (удалена дубль-константа).
 
 import shutil
 from pathlib import Path

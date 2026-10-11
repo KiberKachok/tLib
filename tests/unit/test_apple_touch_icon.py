@@ -1,4 +1,3 @@
-# Version 1.0 - 06.10.2026 12:45:04 GMT
 # Unit tests: assets/apple-touch-icon.png и ссылки на него в HTML-страницах
 # Описание: Safari на iPhone без <link rel="apple-touch-icon"> запрашивает /apple-touch-icon.png
 #           в корне сайта и получает 404. Проверяет, что иконка есть, это PNG 180×180,

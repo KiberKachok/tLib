@@ -1,9 +1,5 @@
-// Version 1.2 - 22.06.2026
 // Описание: Конфигурация Playwright для регрессионных E2E тестов TlibWebApp. Использует BASE_URL для запуска тестов
 //           против локального сервера или деплоя, и запускает Chromium в headless режиме.
-// Изменения v1.1: env-gated параллелизм — при удалённом BASE_URL workers=2 и retries=2,
-//           чтобы не перегружать сервер с rate limiting при параллельном прогоне.
-// Изменения v1.2: isRemote учитывает IPv6-localhost (::1).
 
 const { defineConfig } = require('@playwright/test');
 
@@ -21,6 +17,7 @@ module.exports = defineConfig({
   expect: {
     timeout: 15_000,
   },
+  // Удалённый сервер с rate limiting: два воркера и повторы, чтобы параллельный прогон его не перегружал
   retries: isRemote ? 2 : 1,
   workers: isRemote ? 2 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],

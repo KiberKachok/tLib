@@ -1,9 +1,5 @@
-// Version 1.3 - 15.06.2026
 // Кнопки авторизации и публикации в футере левой панели главной страницы.
 // Проверяет /api/auth/me, переключает UI и обрабатывает вход (редирект) / выход.
-// Изменения v1.1: повторная проверка авторизации при возврате на вкладку (visibilitychange/focus).
-// Изменения v1.2: переведён на authService (getCurrentUser/logout).
-// Изменения v1.3: исправлен висячий вызов удалённого checkAuth() в recheckAuthOnReturn -> getCurrentUser().
 
 import { getCurrentUser, logout } from '../services/authService.js';
 

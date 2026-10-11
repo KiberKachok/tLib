@@ -1,4 +1,3 @@
-# Version 2.4 - 11.10.2026 09:35:16 GMT
 # Lists Router для TlibWebApp
 # Описание: API endpoints для получения справочных списков из базы данных. Предоставляет шесть endpoint'ов:
 #           GET /api/dopshifr-list, /api/raion-obshiy-list, /api/tip-list, /api/kategoria-s-list, /api/kategoria-po-list,
@@ -6,8 +5,8 @@
 #           Оба endpoint'а категорий (kategoria-s-list и kategoria-po-list) возвращают единый объединённый список.
 #           Данные кэшируются при запуске приложения в app.state. reference-version позволяет фронтенду проверять актуальность
 #           справочников без загрузки самих списков. Использует функцию-фабрику для создания endpoint'ов.
-# 2.4: reference-version отдаёт started_at — время запуска сервера. Сменилось — сайт перезапущен (обычно деплой),
-#      фронт просит обновить страницу. version для этого не годится: он меняется и при обновлении БД.
+#           reference-version отдаёт и started_at — время запуска сервера: по нему фронт понимает, что сайт
+#           перезапущен (обычно деплой). version для этого не годится: он меняется и при обновлении БД.
 
 from fastapi import APIRouter, Request, Response
 

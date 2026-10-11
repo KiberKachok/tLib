@@ -1,4 +1,3 @@
-# Version 1.3 - 15.06.2026 10:18:00 GMT
 # File Watcher Utils - Вспомогательные функции
 # Описание: Вспомогательные функции для File Watcher pipeline:
 #           - initialize_directories() создает структуру директорий (data.up/, 10_up/, 20_go/, 30_processing/, 40_error/, data.old/)

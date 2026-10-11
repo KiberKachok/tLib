@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Version 1.0 - 22.06.2026 14:25:00 GMT
 # Утилита для проверки линеаризации PDF (Fast Web View) и её выполнения.
 # Поддерживает: QPDF, Ghostscript, pikepdf, PDFtk.
 # Опциональные зависимости: PyPDF2 (pip install PyPDF2), pikepdf (pip install pikepdf).

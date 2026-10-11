@@ -1,4 +1,3 @@
-// Version 1.1 - 20.02.2026 - Зона 2: hash state вынесен в viewStateManager.js
 // Описание: Viewer-стратегия для изображений. Реализует контракт viewer-стратегии:
 //   buildFileListHtml, buildViewersHtml, setupHandlers, selectLink, autoLoad,
 //   applyHashState, getHashStateOnTabSwitch.

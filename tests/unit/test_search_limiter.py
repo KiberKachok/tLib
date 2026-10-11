@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 18:00:00 GMT
 # Unit tests for services/database/search_limiter.py
 # Описание: Проверяет эвристику is_light_query (точные поля, поля по длине)
 #           и поведение HeavyQueryLimiter (семафор, счётчик очереди).

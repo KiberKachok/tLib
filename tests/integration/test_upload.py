@@ -1,12 +1,5 @@
-# Version 1.5 - 01.10.2026 14:35:00 GMT
 # Integration tests: upload endpoints
 # Описание: In-process тесты для всех endpoints /api/upload/*.
-# 1.5: submit с пустым dopshifr сохраняет отчёт без ДопШифр (id вида 00205).
-# 1.1: удалён ассерт call[3] is False (published=False) — параметр убран из send_report_decision.
-# 1.2: тест 413 обновлён под потоковую схему (patching upload_router.MAX_ARCHIVE_SIZE);
-#      добавлены TestOversize (temp-мусор) и TestDiskGuard (507 + /status).
-# 1.3: регресс-тест очистки скопированного архива при сбое записи .editmeta (ветка copy2).
-# 1.4: тесты DISK_LOW-алерта при блокировке аплоада (submit, submit-edit, /status, happy-path).
 #           Проверяют: контроль доступа (401/403), бизнес-логику (next-code, check-code,
 #           submit, publish, reject, submit-edit, request-delete, confirm/reject-delete)
 #           и файловые инварианты (файлы появляются в нужных директориях).

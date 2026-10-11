@@ -1,4 +1,3 @@
-// Version 1.1 - 15.06.2026
 // API endpoints, внешние URL и настройки безопасности
 
 import { deepFreeze } from '../utils/freeze.js';

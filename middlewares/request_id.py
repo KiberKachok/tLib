@@ -1,4 +1,3 @@
-# Version 1.0 - 30.12.2025 07:48:27 GMT
 # Request ID Middleware для TlibWebApp
 # Описание: Middleware для добавления уникального request_id к каждому HTTP запросу.
 #           Генерирует UUID для каждого запроса и сохраняет его в контексте через request_id_var (ContextVar).

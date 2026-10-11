@@ -1,4 +1,3 @@
-# Version 3.1 - 15.06.2026 10:18:00 GMT
 # JSON Schema Validation Service для TlibWebApp
 # Описание: Модуль валидации JSON отчетов по JSON Schema (assets/schema.json).
 #           read_json_file() делегирует чтение в services.json_io.read_json (BOM-устойчивое);

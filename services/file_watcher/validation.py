@@ -1,13 +1,4 @@
-# Version 2.4 - 14.05.2026 00:00:00 GMT
 # File Watcher Validation - Валидация JSON и ZIP файлов
-# v2.4: Ветка «ТипФайла объявлен, но архив отсутствует» в validate_archive_consistency теперь
-#       является safety-net для race-conditions. Основная отсечка перенесена в
-#       filter_complete_groups (scanner.py): JSON с ТипФайла=zip/pdf остаётся в 20_go/, пока
-#       нужный архив не появится в data/. До фикса scanner.py эта ветка срабатывала при
-#       разрыве GoogleDrive-синхронизации (JSON приходил раньше ZIP).
-# v2.3: BadZipFile-ветка расширена — в сообщение включаются оригинальный текст исключения,
-#       размер файла и mtime (ISO-формат). Упрощает диагностику редких случаев, когда
-#       stability-window пропустил битый файл (реально повреждённый архив, не-ZIP под .zip).
 # Описание: Модуль чистой логики валидации для File Watcher pipeline.
 #           - validate_json_file() проверяет JSON на корректность синтаксиса и соответствие схеме assets/schema.json
 #           - validate_filename_matches_content() проверяет соответствие имени файла и его содержимого (Шифр, ДопШифр)

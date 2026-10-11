@@ -1,10 +1,8 @@
-# Version 1.1 - 23.09.2026 13:15:00 GMT
 # Unit tests for services/database/update_service.py
 # Описание: Проверяет validate_sqlite_database (магический заголовок, невалидные файлы)
 #           и perform_database_update (атомарная замена, бэкап, удаление триггера,
 #           алерт DB_SWAP_FAILED при сбое и тишину при отсутствии триггера).
 #           Всё на tmp-файлах, без живой БД приложения. send_admin_alert подменяется.
-# Изменения v1.1: заглушка алерта и проверки сбоя замены.
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-# Version 1.1 - 12.06.2026 19:00:00 GMT
 # Unit tests for services/file_watcher/validation.py
 # Описание: Проверяет чистые функции валидации File Watcher pipeline:
 #           validate_filename_matches_content, validate_zip_file,

@@ -1,4 +1,3 @@
-# Version 1.0 - 21.06.2026 09:00:00 GMT
 # Пер-IP троттлинг для POST /api/auth/request-link
 # Описание: In-memory ограничение числа запросов request-link с одного IP-адреса.
 #           Словарь ip -> (window_start, count) с периодической очисткой по образцу rate_limit.py.

@@ -1,4 +1,3 @@
-# Version 2.0 - 14.05.2026 00:00:00 GMT
 # File Watcher Deleter - Перенос файлов группы из data/ в data.old/
 # Описание: Обработка .delete триггеров для удаления файлов отчёта из data/.
 #           process_delete_operation() переносит файлы группы из data/ в data.old/ с timestamp

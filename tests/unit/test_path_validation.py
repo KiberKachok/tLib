@@ -1,10 +1,8 @@
-# Version 1.1 - 21.06.2026 19:00:00 GMT
 # Path validation tests for TlibWebApp
 # Описание: Набор unit/regression тестов для единого валидатора путей.
 #           Проверяет, что безопасные имена файлов и zip-member пути проходят,
 #           а попытки Path Traversal, абсолютные пути, backslash, Windows drive/UNC и double-encoding
 #           корректно отклоняются контролируемой ошибкой (400/403), без падений.
-# 1.1: добавлен кейс nested-путь с require_basename=False (cache/png-router сценарий).
 
 from __future__ import annotations
 

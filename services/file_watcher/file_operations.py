@@ -1,4 +1,3 @@
-# Version 2.3 - 26.07.2026 09:00:00 GMT
 # File Watcher File Operations - Файловые операции
 # Описание: Модуль файловых операций (side effects) для File Watcher pipeline.
 #           - move_group_to_processing() атомарно перемещает группу файлов в data.up/30_processing/

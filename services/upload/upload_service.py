@@ -1,27 +1,5 @@
-# Version 1.8 - 26.07.2026 10:00:00 GMT
-# 1.8: удалено поле ИмяФайла из JSON-отчётов (выводится из ID и ТипФайла, в БД не хранится).
 # Upload Service для TlibWebApp
 # Описание: Вся бизнес-логика подсистемы загрузки отчётов.
-# 1.6: добавлена list_my_published_reports — список опубликованных отчётов пользователя
-#      (по ЗагрузилID) из tlib.db для раздела «Мои отчёты» на странице загрузки.
-# 1.7: list_my_published_reports — обработка строки обёрнута в свой try/except,
-#      чтобы одна повреждённая запись в tlib.db не обнуляла весь список.
-# 1.1: удалены неиспользуемые json_filename() и archive_filename() — имена строятся inline;
-#      убран параметр published из send_report_decision (публикация идёт через send_report_published).
-# 1.2: normalize_dopshifr и тело normalized_id -> делегаты services.id_utils;
-#      pdf_page_count -> count_pdf_pages из pdf_to_png_service; taken_codes_in_db -> make_norm_id.
-# 1.3: добавлены read-модели _resolve_uploader, read_staged_item, read_published_item (перенесены из upload_router).
-# 1.4: do_submit/do_publish/do_submit_edit принимают file_path: Path + file_size: int вместо bytes.
-#      Файл записывается через shutil.move (атомарный rename из temp). PDF-страницы считаются
-#      напрямую из temp-файла без второго tmp. Temp очищается во всех early-return ветках.
-# 1.5: исправлена очистка скопированного архива в do_submit_edit (ветка copy2): условие
-#      archive_path_new больше не зависит от has_new_file, что предотвращало утечку сироты.
-#           - нормализация и формирование ID (Шифр, ДопШифр)
-#           - проверка уникальности кодов в БД, staging и processing
-#           - работа с файлами staging (10_up): поиск пар, список, pdf-страницы
-#           - чтение опубликованных отчётов из tlib.db и data/
-#           - операции: submit, publish, reject, submit_edit, request_delete,
-#             confirm_delete, reject_delete
 
 import asyncio
 import json

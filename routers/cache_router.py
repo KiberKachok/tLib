@@ -1,28 +1,7 @@
-# Version 2.8 - 26.09.2026 10:00:00 GMT
 # Cache Router для TlibWebApp
 # Описание: API endpoints для eager caching с per-file readiness.
 #           POST /prepare - fire-and-forget запуск подготовки кеша.
 #           POST /resolve - resolve для image, track, all_tracks (PDF-вьюер ходит в /api/png/.../pages).
-# 2.8: _format_file_list отдаёт pages и для PDF на паузе (partial): при рендере по окну почти
-#      все PDF в кеше partial, и без pages любой PDF открывался бы только после жеста.
-#      С data-pages-total вьюер сразу показывает готовые страницы, заглушки — на остальных.
-# 2.7: /prepare больше не докручивает PDF на паузе: без зрителя окно рендера — первые страницы,
-#      которые уже готовы, и докрутка была бы холостым lock + перераспаковкой. Единственный
-#      триггер докрутки — /api/png/.../pages.
-# 2.6: конвертация PDF, пока смотрят. _format_file_list не отдаёт pages для PDF на паузе
-#      (status=partial): без data-pages-total фронтенд держит гейт по жесту, а pages_total
-#      вьюер берёт из /pages. /prepare (не probe) при валидном кеше докручивает первый partial.
-# 2.5: kind=pdf убран из /resolve — путь без потребителя, запускал convert_standalone_pdf
-#      прямым запросом в обход фронтенда. Неизвестный kind -> 400 (CACHE_RESOLVE_KINDS).
-# 2.4: /prepare?probe=1 — проба без запуска подготовки (статус not_prepared + TOC).
-#      Карточка отчёта рендерится через пробу, чтобы headless-боты, исполняющие JS,
-#      не запускали конвертацию; реальный запуск — только после жеста пользователя.
-# 2.3: _is_hidden — скрытые отчёты (app.state.hidden_reports) не кешируются: /prepare, /resolve
-#      и /contents отвечают как для отсутствующего файла (not_found/404).
-# 2.1: _validate_archive_name и /resolve body.path переведены на канонический
-#      validate_and_resolve_under_base() (§3 — boundary через Path.relative_to).
-# 2.2: атрибуция IP/endpoint в _validate_archive_name — security-события по archive_name
-#      теперь логируются с реальным client_ip и endpoint (а не ip=unknown).
 
 import os
 import urllib.parse

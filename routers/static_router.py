@@ -1,4 +1,3 @@
-# Version 2.0 - 07.10.2026 06:59:06 GMT
 # Static Router для TlibWebApp
 # Описание: Роутер для обработки статических страниц, серверных редиректов и таблицы редиректов.
 #           GET / — SEO-aware рендер: для компактных URL отчётов (/?123, /?123-ТССР) возвращает
@@ -24,22 +23,6 @@
 #           Редиректы статических директорий: /js, /css, /assets, /data → с добавлением / в конце.
 #           Поддерживает fallback для favicon.ico (assets/favicon.ico → favicon.ico).
 #           Отдаёт assets/apple-touch-icon.png по корневым путям, которые Safari запрашивает сам.
-#           1.4: about.html через HTMLResponse (render_about_html); robots.txt + Clean-param;
-#                защитные legacy-маршруты /doc.aspx (регистровые варианты) + /default.aspx.
-#           1.5: robots.txt разрешает обход PDF (Allow: /api/pdf/, /data/*.pdf$) — краулер должен
-#                скачать файл, чтобы увидеть X-Robots-Tag: noindex и убрать его из индекса.
-#           1.6: GET / снимает метки ROBOTS_CLEAN_PARAMS (ysclid и др.) редиректом 301
-#                на тот же URL без них — компактный адрес отчёта снова разбирается.
-#           1.7: хвостовой «=» у компактного шифра (3725= от Яндекса) тоже снимается 301;
-#                legacy ?id= обрабатывается до очистки меток — один переход, не два.
-#           1.8: /, /index.html, /about.html и /robots.txt принимают HEAD — краулеры
-#                (curl -I) больше не получают 405 от FastAPI, который HEAD к GET не добавляет.
-#           1.9: пути файлов старого сайта (/png/02/89/028919.58.png, /files/43745/0/x.pdf)
-#                → 301 на страницу отчёта по СтарыйID; ядро поиска по id вынесено в
-#                _redirect_by_old_id и общее с ?id=. Имя без цифр → 404, как раньше.
-#           2.0: /doc.aspx без id (и с пустым id=) → 301 на /, как /default.aspx: раньше вёл на
-#                /?notfound=1, и человек и Googlebot видели «ничего не найдено» вместо главной.
-#                /apple-touch-icon.png и /apple-touch-icon-precomposed.png → assets/apple-touch-icon.png.
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse

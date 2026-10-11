@@ -1,4 +1,3 @@
-# Version 1.0 - 06.10.2026 12:45:04 GMT
 # Unit tests: routers/search_router.py — обрыв соединения клиентом на приёме формы
 # Описание: Клиент закрывает соединение, пока сервер читает тело POST /api/search
 #           (ClientDisconnect из request.form()). Ожидается общий конверт success=False,

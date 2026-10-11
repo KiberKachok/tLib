@@ -1,7 +1,3 @@
-# Version 2.8 - 23.09.2026 12:20:00 GMT
-# v2.8: reindex — исключение при пересборке уводит триггер в 40_error (stem, не литерал);
-#       recover_interrupted_reindex() при старте переносит остаток из 30_processing/ в 40_error.
-# v2.7: canonicalize_json_dopshifr — приведение поля ДопШифр в JSON к UPPERCASE в 30_processing/.
 # File Watcher Pipeline - Оркестрация staged pipeline
 #
 # Текущая функциональность:

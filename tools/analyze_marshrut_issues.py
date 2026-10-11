@@ -1,6 +1,4 @@
-# Version 1.1 - 15.06.2026 10:18:00 GMT
 # Анализ проблем поля «Маршрут» в tlib.db.
-# 1.1: make_id -> делегат services.id_utils.make_norm_id (устранён дубль нормализации ID).
 """
 analyze_marshrut_issues.py — Анализ проблем поля «Маршрут» в tlib.db (read-only).
 

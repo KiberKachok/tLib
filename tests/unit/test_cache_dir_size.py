@@ -1,4 +1,3 @@
-# Version 1.0 - 26.09.2026 11:49:27 GMT
 # Тесты подсчёта cache_size_bytes (services/cache/cache_pipeline._compute_cache_dir_size)
 # Описание: Размер папки кеша считается под lock, но должен совпадать с тем, что останется
 #           на диске после его снятия: _work/ (перераспакованный PDF докрутки), lockdir

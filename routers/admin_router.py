@@ -1,27 +1,5 @@
-# Version 3.14 - 23.09.2026 12:30:00 GMT
 # Admin Router для TlibWebApp
 # Описание: Информационная страница администратора.
-# 3.14: POST /api/admin/reindex проверяет занятость через collect_reindex();
-#       GET /api/admin/reindex-status удалён — состояние в GET /api/admin/status.
-# 3.13: тема тестового письма использует MAIL_SUBJECT_PREFIX (домен из SITE_URL) вместо "[tLib]".
-# 3.12: GET/POST /api/admin/hidden-reports — список скрытых отчётов (см. services/hidden_reports.py);
-#           POST обновляет app.state.hidden_reports сразу после сохранения настройки.
-# 3.2: auth-хелперы (_get_admin_user, _unauthorized, _forbidden) вынесены в services/auth/session_helpers.
-# 3.3: удалён неиспользуемый импорт forbidden (_forbidden — 0 вызовов).
-# 3.4: подключение к БД переведено на open_tlib_db() (read-only); убраны прямые sqlite3/SQLITE_CONNECT_TIMEOUT.
-# 3.5: _LOG_KV_RE/_parse_log_kv -> parse_logfmt_fields из logging_config (единый парсер).
-# 3.6: _collect_* вынесены в services/admin/status_service (collect_health, collect_status).
-# 3.7: панель управления пользователями — GET /api/admin/users, GET /api/admin/sessions,
-#           POST /api/admin/users/activate, /deactivate, /delete.
-# 3.8: _check_self_and_root убран из activate (активация безопасна, не нужна защита).
-# 3.9: удалён эндпоинт /api/admin/users/delete — удаление только через CLI.
-# 3.10: GET /api/admin/sessions теперь содержит token_hash и is_current;
-#           POST /api/admin/sessions/delete — завершение конкретной сессии.
-# 3.11: рефакторинг панели 7 — единые таблицы пользователей:
-#           /api/admin/users теперь возвращает is_root, is_self, last_login_ip, active_session_count;
-#           добавлен POST /api/admin/users/logout (завершить все сессии пользователя;
-#             для своей учётки — все, кроме текущей);
-#           удалены GET /api/admin/sessions и POST /api/admin/sessions/delete.
 #           GET  /admin                — отдаёт admin.html (публично, содержимое зависит от роли)
 #           GET  /api/admin/health-brief — общий статус здоровья (публично, для хедера)
 #           GET  /api/admin/status     — полный JSON статуса (только для админов)
@@ -32,11 +10,13 @@
 #           POST /api/admin/settings   — сохранить настройки (только для админов)
 #           POST /api/admin/test-email — отправить тестовое письмо (только для админов)
 #           GET  /api/admin/users      — список всех пользователей (только для админов)
-#           POST /api/admin/users/activate   — разблокировать пользователя (только для админов)
+#           POST /api/admin/users/activate   — разблокировать пользователя (только для админов;
+#                                              без проверки себя и root — разблокировка безопасна)
 #           POST /api/admin/users/deactivate — заблокировать + закрыть сессии (только для админов)
 #           POST /api/admin/users/logout     — завершить сессии пользователя (только для админов)
 #           GET  /api/admin/hidden-reports   — список скрытых отчётов (только для админов)
 #           POST /api/admin/hidden-reports   — сохранить список скрытых отчётов (только для админов)
+#           Удаление пользователя — только через CLI (tools/manage_users.py), эндпоинта нет намеренно.
 #           Аутентификация: cookie session_token + role='admin' или ROOT_ADMIN_EMAIL.
 
 from datetime import datetime, timezone

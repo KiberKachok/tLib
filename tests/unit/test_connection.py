@@ -1,11 +1,9 @@
-# Version 1.1 - 07.10.2026 06:56:18 GMT
 # Unit tests for services/database/connection.py
 # Описание: Проверяет open_tlib_db():
 #           - read-only режим запрещает запись (OperationalError на INSERT)
 #           - row_factory=True возвращает sqlite3.Row, False — tuple
 #           - register_lower корректно понижает кириллицу через SQL-функцию LOWER
 #           Всё на tmp-файлах, без живой БД приложения.
-# 1.1: LOWER сворачивает ё в е — поиск LIKE находит «Озёрный» по «озер» и «Озерный» по «озёр».
 
 from __future__ import annotations
 

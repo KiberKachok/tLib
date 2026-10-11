@@ -1,19 +1,6 @@
-# Version 1.8 - 07.10.2026 06:58:41 GMT
 # Конфигурация приложения TlibWebApp
 # Описание: Метаданные, сетевые настройки, пути к ресурсам, логирование,
 #           редиректы и ключи app.state.
-# 1.8: APPLE_TOUCH_ICON_PATH / APPLE_TOUCH_ICON_URL_PATHS — Safari сам запрашивает иконку в корне.
-# 1.7: REDIRECT_LEGACY_FILE_KINDS / REDIRECT_LEGACY_FILES_PREFIX — пути файлов старого
-#      сайта (/png/02/89/028919.58.png, /files/43745/0/имя.pdf) ведут на страницу отчёта.
-# 1.6: комментарий ROBOTS_CLEAN_PARAMS — список ещё и вырезается из живых URL.
-# 1.5: ysclid в ROBOTS_CLEAN_PARAMS — Яндекс дописывает его к ссылке из выдачи.
-# 1.4: SITE_NOTICE_PATH / SITE_NOTICE_MAX_LENGTH — серверное объявление в сайдбаре
-#      (файл в data.secret/, не в git).
-# 1.3: LOG_DEBUG_LEVEL переопределяется переменной окружения (включение debug.log
-#      на тестовом стенде через data.secret/.env без правки кода).
-# 1.2: добавлены OG_IMAGE_PATH/OG_IMAGE_WIDTH/OG_IMAGE_HEIGHT (Open Graph картинка).
-# 1.1: добавлены REDIRECT_SOURCE_ALIASES, REDIRECT_DEFAULT_ASPX_PATHS (legacy IIS),
-#      ROBOTS_CLEAN_PARAMS (Яндекс Clean-param для UTM/openstat меток).
 
 # ==================== МЕТАДАННЫЕ ПРИЛОЖЕНИЯ ====================
 

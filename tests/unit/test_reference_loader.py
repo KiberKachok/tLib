@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 20:00:00 GMT
 # Unit tests for services/database/reference_loader.py
 # Описание: Проверяет load_reference_lists (справочники, категории, отчёт-счётчик)
 #           и load_redirect_table (маппинг СтарыйID → Шифр).

@@ -1,4 +1,3 @@
-# Version 2.5 - 15.06.2026 17:05:00 GMT
 # Database package для TlibWebApp
 # Описание: Пакет для работы с базой данных SQLite
 # - connection.py:       Единый помощник открытия соединения open_tlib_db() (read-only)
@@ -10,7 +9,6 @@
 # - update_service.py:   Автообновление БД и управление бэкапами
 # - export_utils.py:     Экспорт БД в документы (XLSX)
 # - search_limiter.py:   Ограничение параллельных тяжёлых запросов
-# 2.5: добавлен экспорт count_search/execute_search из search_executor.py
 
 from .connection import open_tlib_db
 from .query_builder import build_search_query

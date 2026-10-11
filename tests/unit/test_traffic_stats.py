@@ -1,4 +1,3 @@
-# Version 1.0 - 12.06.2026 20:00:00 GMT
 # Unit tests for middlewares/traffic_stats.py
 # Описание: Проверяет функции категоризации запросов (_categorize, _report_id_from_path,
 #           _report_id_from_page) и StatsCollector (record, flush, query).

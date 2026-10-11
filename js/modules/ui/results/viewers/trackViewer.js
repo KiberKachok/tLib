@@ -1,4 +1,3 @@
-// Version 1.2 - 20.02.2026 - Рефакторинг: дублированная IIFE вынесена в getGpsAllTracksUrl()
 // Описание: Viewer-стратегия для GPS-треков (nakarte.me iframe). Реализует контракт viewer-стратегии:
 //   buildFileListHtml, buildViewersHtml, setupHandlers, autoLoad,
 //   applyHashState, getHashStateOnTabSwitch.

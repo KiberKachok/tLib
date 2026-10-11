@@ -1,4 +1,3 @@
-# Version 2.1 - 25.12.2025 15:26:06 GMT
 # Middleware для детекции Path Traversal атак
 # Описание: Трехэтапная защита от Path Traversal атак:
 #           1) Детектирует URL-encoded паттерны (%2e%2e) ДО декодирования

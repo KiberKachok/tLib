@@ -1,4 +1,3 @@
-# Version 1.1 - 12.06.2026 18:00:00 GMT
 # Unit tests for services/file_watcher/scanner.py and utils.py
 # Описание: Проверяет нормализацию ID групп (Шифр → 5 цифр, ДопШифр → UPPERCASE),
 #           склейку разных написаний одного Шифра в одну группу и детект дубликатов.

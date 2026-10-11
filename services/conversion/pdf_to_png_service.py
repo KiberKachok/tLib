@@ -1,4 +1,3 @@
-# Version 6.1 - 03.10.2026 10:17:22 GMT
 # PDF to PNG Conversion Service для TlibWebApp
 # Описание: Конвертация PDF файлов в PNG страницы.
 #           Использует PyMuPDF (fitz) для рендеринга PDF страниц.
@@ -7,26 +6,6 @@
 #           Пиковое потребление RAM — одна страница, а не весь документ.
 #           Lock на уровне архива обеспечивается cache_prepare_service.
 #           Конфигурация через PDF_TO_PNG_* параметры в config.py.
-# 5.0: конвертация, пока смотрят. Готовые PNG пропускаются (докрутка частичной директории),
-#      первой рендерится страница, которую показывает вьюер (want из _watch.json), запуск
-#      встаёт на паузу через PDF_CONVERT_IDLE_TIMEOUT_SECONDS тишины heartbeat.
-#      PNG пишется атомарно (tmp + os.replace): готовая страница больше не перерисовывается,
-#      поэтому обрыв записи при рестарте не должен оставлять битый файл.
-#      Результат — (pages_done, page_count, total_size, completed).
-# 5.1: рендер по окну просмотра (cache_watch.first_missing_in_window): без свежего heartbeat —
-#      первые PDF_CONVERT_PREWARM_PAGES страниц, со свежим — не дальше PDF_CONVERT_LOOKAHEAD_PAGES
-#      от want; окно готово — пауза. Правило «первая страница запуска рендерится всегда» убрано:
-#      опрос вьюера раз в 2 с докручивал бы по нему весь PDF. Результат —
-#      (pages_done, page_count, rendered, completed); одна INFO-строка «PDF conversion run» на запуск.
-# 5.2: generate_png_filename переехал в services/cache/cache_service.py — имена PNG нужны и окну
-#      рендера (cache_watch) без циклического импорта; импорт из этого модуля продолжает работать.
-# 5.3: render_ms (длительность запуска в thread pool) в «PDF conversion run».
-# 6.0: рендер страницы и page_count — в spawn-процессе (ProcessPoolExecutor, PDF_RENDER_WORKERS):
-#      цикл окна, on_progress и логи остаются в потоке. Воркер умер (BrokenProcessPool) — пул
-#      пересоздаётся следующим рендером, запуск завершается ошибкой, сервер жив.
-#      shutdown_render_pool() — для lifespan shutdown.
-# 6.1: shutdown_render_pool ждёт выхода воркера (wait=True) — uvicorn после lifespan переподнимает
-#      SIGTERM и умирает без atexit, и не дошедший sentinel оставил бы воркер жить до SIGKILL.
 
 import time
 import asyncio

@@ -1,4 +1,3 @@
-# Version 1.1 - 03.10.2026 10:17:22 GMT
 # Тесты процесса-воркера рендера PDF→PNG (services/conversion/pdf_render_worker.py,
 # пул в services/conversion/pdf_to_png_service.py)
 # Описание: Воркер импортирует только stdlib и fitz — config/logging_config в spawn-процессе
@@ -7,7 +6,6 @@
 #           ошибкой, следующий рендер создаёт новый пул; сброс не трогает уже пересозданный пул.
 #           Остановка в lifespan ждёт выхода воркера (wait=True): uvicorn умирает без atexit.
 #           PDF генерируется PyMuPDF; без fitz тесты пропускаются.
-# 1.1: test_shutdown_waits_for_worker.
 
 import json
 import subprocess

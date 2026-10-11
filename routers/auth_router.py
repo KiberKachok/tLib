@@ -1,4 +1,3 @@
-# Version 1.4 - 21.06.2026 12:05:00 GMT
 # Auth Router для TlibWebApp
 # Описание: Magic link авторизация без пароля.
 #           POST /api/auth/request-link — принять email + опциональный redirect, отправить magic link
@@ -6,12 +5,6 @@
 #           POST /api/auth/verify-code  — проверить цифровой код, выдать cookie (JSON)
 #           POST /api/auth/logout       — удалить сессию, очистить cookie; ?all=1 — все сессии
 #           GET  /api/auth/me           — вернуть данные текущего пользователя
-# Изменения v1.2: гибридная авторизация — новый endpoint verify-code, _set_session_cookie helper.
-# Изменения v1.3: logout поддерживает ?all=1 (выход со всех устройств через delete_all_sessions_for_token);
-#           request-link: пер-IP троттлинг (request_throttle), дневной лимит писем (email_quota_remaining),
-#           структурированные 429-ответы с reason и retry_after; EMAIL_QUOTA алерт при исчерпании лимита.
-# Изменения v1.4: исчерпание дневного лимита логируется через log_email_quota_exceeded
-#           (event_type=EMAIL_QUOTA), а не log_invalid_request (что давало event_type=INVALID_REQUEST).
 
 import asyncio
 

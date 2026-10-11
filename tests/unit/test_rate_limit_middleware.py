@@ -1,10 +1,8 @@
-# Version 1.1 - 30.09.2026 15:27:03 GMT
 # Unit tests for middlewares/rate_limit.py
 # Описание: Проверяет, что PNG-страницы PDF-вьюера (/cache/) — лёгкая статика: не расходуют
 #           API-лимит, из которого живёт heartbeat /api/png/.../pages, и не занимают слоты
 #           concurrent-лимита. RateLimitMiddleware оборачивает тривиальное ASGI-приложение,
 #           которое в момент запроса снимает active_connections — так виден счётчик «в полёте».
-# Изменения v1.1: RATE_LIMIT_EXCEEDED получает путь запроса (endpoint).
 
 from __future__ import annotations
 

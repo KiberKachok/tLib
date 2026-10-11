@@ -1,15 +1,5 @@
-# Version 7.0 - 03.10.2026 09:36:10 GMT
 # FastAPI приложение для просмотра архивов и поиска в базе данных
 # Описание: Главный файл приложения, инициализирует FastAPI сервер, регистрирует роутеры и middleware.
-# 7.0: lifespan shutdown останавливает процесс-воркер рендера PDF→PNG (shutdown_render_pool).
-# 6.9: тема письма о старте сервера использует MAIL_SUBJECT_PREFIX (домен из SITE_URL) вместо "[tLib]".
-# 6.8: удалён signal_handler (перехватывал SIGTERM/SIGINT и только логировал их, не завершая
-#           процесс) — из-за него uvicorn не получал сигнал, graceful shutdown (lifespan) не
-#           отрабатывал никогда, и остановка/рестарт сервиса всегда заканчивались SIGKILL по
-#           TimeoutStopSec. Убран и неиспользуемый после этого import signal.
-# 6.7: app.state.hidden_reports — кэш списка скрытых отчётов (см. services/hidden_reports.py),
-#           загружается после init_auth_db() (настройка хранится в auth.db).
-# 6.6: удалён неиспользуемый импорт DIGEST_TIMEZONE_OFFSET_HOURS (используется только в digest.py).
 #           Обслуживает статические файлы (JS, CSS, assets, data).
 #           При запуске загружает справочные данные и количество отчетов из БД, таблицу редиректов из поля СтарыйID,
 #           а также сохраняет reference_version в app.state для проверки актуальности справочников на фронтенде.
@@ -20,6 +10,8 @@
 #           security headers, фильтрация HTTP методов. Все попытки атак логируются в critical.log.
 #           Резервные копии: все бэкапы (файлов и БД) сохраняются в data.old/ с ручным удалением.
 #           Платформа: Ubuntu Server (production).
+#           Своего обработчика SIGTERM/SIGINT нет намеренно: он перехватывал сигнал у uvicorn,
+#           lifespan не отрабатывал, и остановка сервиса заканчивалась SIGKILL по TimeoutStopSec.
 
 import asyncio
 import logging

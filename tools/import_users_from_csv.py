@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-# Version 1.2 - 22.06.2026 11:00:00 GMT
 # Утилита импорта пользователей из CSV в auth.db (SQLite).
-# Изменения v1.1: схема magic_links синхронизирована с init_auth_db() (code_hash, attempts).
-# Изменения v1.2: AUTH_SCHEMA_SQL импортируется из services.auth.auth_db (единый источник истины).
 """
 Импорт пользователей из CSV-файла в новую auth.db (SQLite).
 

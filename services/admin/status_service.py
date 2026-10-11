@@ -1,12 +1,7 @@
-# Version 1.3 - 23.09.2026 12:30:00 GMT
 # Сервис сбора операционного статуса для панели администратора.
 # Описание: Функции сбора данных о здоровье системы, дисках, динамике пополнения,
 #           трафике и событиях безопасности. Вызываются из admin_router.
 #           Принимают app_state (Starlette State) вместо Request — сервис свободен от FastAPI.
-# 1.1: UPLOAD_PAUSE_DIRECTORY перенесён в верхний блок from config import (единообразие, monkeypatch).
-# 1.2: добавлен collect_pcloud_sync() — статус зеркала data/ в pCloud по файлу-метке
-#      (внешняя systemd-служба, doc/DEPLOY.md), встроен в collect_health().
-# 1.3: collect_reindex() — состояние реиндексации по каталогу триггера reindex.*.
 
 import os
 import re

@@ -1,28 +1,7 @@
-# Version 1.12 - 20.09.2026 09:05:00 GMT
 # Auth DB layer для TlibWebApp
 # Описание: SQLite-слой авторизации. Таблицы: users, magic_links, sessions, app_settings.
 #           Все токены хранятся как SHA-256 хеши — raw токен не попадает в БД.
 #           magic_links удаляются атомарно через DELETE...RETURNING (SQLite 3.35+).
-# Изменения v1.1: гибридная авторизация — magic_links хранит code_hash и attempts;
-#           create_magic_link возвращает (token, code), добавлена verify_magic_code.
-# Изменения v1.2: добавлена таблица app_settings и функции get_setting/set_setting.
-# Изменения v1.3: добавлены delete_all_sessions_for_token (выход со всех устройств);
-#           email_quota_remaining, bump_email_quota, seconds_until_utc_midnight
-#           (дневной лимит писем через app_settings).
-# Изменения v1.4: AUTH_SCHEMA_SQL вынесен в модульную константу — единый источник
-#           истины схемы для tools/import_users_from_csv.py.
-# Изменения v1.5: исправлен запрос get_all_sessions — убран несуществующий столбец s.id.
-# Изменения v1.6: get_all_users и get_all_sessions сортируются по email COLLATE NOCASE.
-# Изменения v1.7: get_all_sessions + s.token_hash; hash_token (публичная обёртка); delete_session_by_hash.
-# Изменения v1.8: поле last_login_at в users — проставляется в create_session(), миграция в init_auth_db().
-# Изменения v1.9: get_all_sessions() сортируется по s.created_at DESC (недавние сверху).
-# Изменения v1.10: поле last_login_ip в users — проставляется в create_session(), миграция в init_auth_db();
-#           get_all_users() возвращает last_login_ip и active_session_count (только живые сессии);
-#           delete_user_sessions() принимает exclude_token_hash для исключения текущей сессии;
-#           удалены get_all_sessions() и delete_session_by_hash() — не используются после рефакторинга панели 7.
-# Изменения v1.11: возвращена get_all_sessions() — ошибочно удалена в v1.10, используется tools/manage_users.py.
-# Изменения v1.12: смена подсети у админ-сессии больше не сбрасывает сессию (было 401) —
-#           пишется security-событие ADMIN_IP_CHANGE и обновляется sessions.ip.
 
 import hashlib
 import ipaddress

@@ -1,7 +1,3 @@
-// Version 1.5 - 11.10.2026 09:17:47 GMT
-// 1.5: showGesturePrompt — кнопка «Открыть отчёт» в placeholder вместо спиннера, пока вьюер ждёт жеста.
-// 1.4: ссылка «Прочее» — other-file-link и data-size: клик ждёт распаковку и сверяет Content-Length.
-// 1.3 - 25.09.2026 - resolveAndWait: kind=pdf убран из /resolve (PDF-вьюер ходит в /pages)
 // Описание: Shared утилиты для всех viewer-стратегий (PDF/Image/Track):
 //   - DOM-утилиты (setActiveLink, showSingleContainer, queryLinks, setupClickDelegates, findLinkByDataset, safeFocusElement)
 //   - HTML-строители (spinnerPlaceholderHtml, prepareFileLink, prepareLinkContext, buildViewersBlockHtml, buildOtherLinkHtml, SVG-иконки)
