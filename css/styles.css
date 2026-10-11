@@ -8,18 +8,12 @@
 */
 
 /* ------------------- Сброс и базовые настройки ------------------- */
-/* Универсальный сброс (box-sizing, margin, padding) не действует и потому закомментирован.
-   С первого коммита он стоял сразу за шапкой, в журнале которой была пара символов «звёздочка-слеш»: комментарий
-   закрывался раньше, остаток журнала становился частью селектора, и браузер отбрасывал правило.
-   Вёрстка сложилась без него; включение меняет отступы на всех страницах — только с проверкой UI.
+/* width/height включают padding и border; margin и padding намеренно не сбрасываются — вёрстка построена на браузерных отступах */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
-*/
 
 /* ------------------- CSS-переменные ------------------- */
 :root {
@@ -154,7 +148,6 @@ textarea {
     border-radius: var(--border-radius);
     background: #f9f9f9;
     transition: border-color var(--transition-normal);
-    box-sizing: border-box; /* явно: у нативных input/textarea width:100% должен включать padding+border (универсальный * не срабатывает на них), иначе +18px overflow за плашку */
     width: 100%;           /* 100% ширина внутри label */
     max-width: 100%;       /* не выходит за пределы контейнера */
     min-width: 0;          /* снимает intrinsic-минимум (size у input), даёт реально ужаться */
@@ -540,7 +533,6 @@ th::before {
     grid-template-areas: "sidebar results";
     gap: 0;
     height: 100dvh;
-    box-sizing: border-box;
     max-width: var(--max-content-width);
     margin-left: auto;
     margin-right: auto;
@@ -563,7 +555,6 @@ th::before {
 .search-panel {
     background: var(--color-bg);
     padding: 0px 12px 16px 0px;
-    box-sizing: border-box;
     overflow: visible;
 }
 
@@ -572,7 +563,6 @@ th::before {
     grid-area: results;
     height: 100%;
     padding: 0;
-    box-sizing: border-box;
     overflow: hidden;
     margin-right: 0px;
 }
