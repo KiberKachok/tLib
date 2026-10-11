@@ -3,11 +3,14 @@
 #           parse_report_query, build_canonical_query, build_title, build_description,
 #           _build_seo_head_html (OG-теги + размеры картинки),
 #           build_route_html (microdata schema.org),
-#           _extract_title_description (единый источник title/description из HTML).
-#           Без БД и сервера — только чистая логика строк.
+#           _extract_title_description (единый источник title/description из HTML),
+#           кеш шаблонов по mtime (_get_template, _cached_page) — на временных файлах.
+#           Без БД и сервера.
 
 from __future__ import annotations
 
+import os
+import tempfile
 import unittest
 
 
@@ -385,6 +388,66 @@ class TestBuildRouteHtmlMicrodata(unittest.TestCase):
     def test_xss_in_comments_escaped(self):
         html_str = self._html(Комментарии='<script>alert(1)</script>')
         self.assertNotIn("<script>", html_str)
+
+
+# ---------------------------------------------------------------------------
+# Кеш шаблонов: перечитывание при смене mtime (заливка фронта без рестарта)
+# ---------------------------------------------------------------------------
+
+
+class TestTemplateCache(unittest.TestCase):
+    def setUp(self):
+        import services.seo.report_seo as m
+        self.m = m
+        m._templates.clear()
+        m._pages.clear()
+        self._tmp = tempfile.TemporaryDirectory()
+        self.path = os.path.join(self._tmp.name, "page.html")
+        self._write("v1", 1_000_000_000)
+
+    def tearDown(self):
+        self.m._templates.clear()
+        self.m._pages.clear()
+        self._tmp.cleanup()
+
+    def _write(self, text: str, mtime_s: int) -> None:
+        with open(self.path, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.utime(self.path, (mtime_s, mtime_s))
+
+    def test_same_mtime_served_from_cache(self):
+        _, first = self.m._get_template(self.path)
+        # Содержимое другое, mtime прежний — кеш не перечитывает файл
+        self._write("v2", 1_000_000_000)
+        _, second = self.m._get_template(self.path)
+        self.assertEqual(first, "v1")
+        self.assertIs(second, first)
+
+    def test_newer_mtime_rereads(self):
+        self.m._get_template(self.path)
+        self._write("v2", 1_000_000_100)
+        self.assertEqual(self.m._get_template(self.path)[1], "v2")
+
+    def test_older_mtime_rereads(self):
+        # cp -a переносит локальный mtime — он может оказаться старше прежнего
+        self.m._get_template(self.path)
+        self._write("v2", 999_999_000)
+        self.assertEqual(self.m._get_template(self.path)[1], "v2")
+
+    def test_cached_page_rebuilt_only_on_mtime_change(self):
+        calls = []
+
+        def render(tmpl: str) -> str:
+            calls.append(tmpl)
+            return f"<{tmpl}>"
+
+        self.assertEqual(self.m._cached_page(self.path, render), b"<v1>")
+        self.assertEqual(self.m._cached_page(self.path, render), b"<v1>")
+        self.assertEqual(calls, ["v1"])
+
+        self._write("v2", 1_000_000_100)
+        self.assertEqual(self.m._cached_page(self.path, render), b"<v2>")
+        self.assertEqual(calls, ["v1", "v2"])
 
 
 if __name__ == "__main__":

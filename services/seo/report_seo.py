@@ -12,7 +12,7 @@
 #             (js/modules/ui/results/single.js) и форматтеров DataFormatter (js/modules/ui/dataFormatter.js).
 #           render_report_html — подстановка SEO_HEAD и SEO_CONTENT зон для отчёта.
 #           render_homepage_html / render_about_html — index.html и about.html с canonical + Open Graph;
-#             title и description берутся из самих шаблонов.
+#             title и description берутся из самих шаблонов; кеш по mtime шаблона.
 #           Использует SITE_URL из config для canonical и sitemap (та же константа, что и в auth/notify).
 #           Все данные из БД экранируются через html.escape (защита от XSS).
 
@@ -20,6 +20,7 @@ import html
 import re
 import sqlite3
 import urllib.parse
+from collections.abc import Callable
 from pathlib import Path
 
 from config import (
@@ -63,26 +64,34 @@ def _extract_title_description(template: str) -> tuple[str, str]:
 # Кеш шаблонов
 # ---------------------------------------------------------------------------
 
-# Кеш живёт до перезапуска сервера: правка index.html или about.html видна только после
-# рестарта, заливка фронта без рестарта (push_test.ps1 -Front) её не покажет.
-_template: str | None = None
-_homepage_cache: bytes | None = None
-_about_template: str | None = None
-_about_cache: bytes | None = None
+# Кеш сверяется с mtime файла: заливка фронта без рестарта (push_test.ps1 -Front) подменяет
+# index.html/about.html, и следующий запрос перечитывает шаблон. Сравнение на неравенство:
+# cp -a переносит локальный mtime, он может оказаться и старше прежнего.
+# stat — до чтения: если запрос попал на недописанный файл, cp -a в конце выставит
+# другой mtime, и обрывок перечитается; при обратном порядке он остался бы в кеше.
+_templates: dict[str, tuple[int, str]] = {}
+_pages: dict[str, tuple[int, bytes]] = {}
 
 
-def _get_template() -> str:
-    global _template
-    if _template is None:
-        _template = Path("index.html").read_text(encoding="utf-8")
-    return _template
+def _get_template(name: str) -> tuple[int, str]:
+    """Возвращает (mtime_ns, текст) шаблона, перечитывая файл при смене mtime."""
+    path = Path(name)
+    mtime = path.stat().st_mtime_ns
+    cached = _templates.get(name)
+    if cached is None or cached[0] != mtime:
+        cached = (mtime, path.read_text(encoding="utf-8"))
+        _templates[name] = cached
+    return cached
 
 
-def _get_about_template() -> str:
-    global _about_template
-    if _about_template is None:
-        _about_template = Path("about.html").read_text(encoding="utf-8")
-    return _about_template
+def _cached_page(name: str, render: Callable[[str], str]) -> bytes:
+    """Готовые байты страницы из шаблона name; пересобираются при смене mtime шаблона."""
+    mtime, tmpl = _get_template(name)
+    cached = _pages.get(name)
+    if cached is None or cached[0] != mtime:
+        cached = (mtime, render(tmpl).encode("utf-8"))
+        _pages[name] = cached
+    return cached[1]
 
 
 # ---------------------------------------------------------------------------
@@ -441,56 +450,48 @@ def _build_homepage_seo_head(title: str, description: str) -> str:
     )
 
 
+def _render_homepage(tmpl: str) -> str:
+    """index.html с canonical + Open Graph в SEO_HEAD; title/description — из самого шаблона."""
+    title, description = _extract_title_description(tmpl)
+    seo_head = _build_homepage_seo_head(title, description)
+    return _SEO_HEAD_RE.sub(
+        f"<!--SEO_HEAD-->{seo_head}<!--/SEO_HEAD-->",
+        tmpl,
+    )
+
+
+def _render_about(tmpl: str) -> str:
+    """about.html с canonical + Open Graph в SEO_HEAD; title/description — из самого шаблона."""
+    title, description = _extract_title_description(tmpl)
+    base = (SITE_URL or "").rstrip("/")
+    canonical = html.escape(f"{base}/about.html")
+    og_image = _build_og_image_meta(base)
+    title_esc = html.escape(title)
+    description_esc = html.escape(description)
+    seo_head = (
+        f"<title>{title_esc}</title>\n"
+        f'    <meta name="description" content="{description_esc}">\n'
+        f'    <link rel="canonical" href="{canonical}">\n'
+        f'    <meta property="og:type" content="website">\n'
+        f'    <meta property="og:title" content="{title_esc}">\n'
+        f'    <meta property="og:description" content="{description_esc}">\n'
+        f'    <meta property="og:url" content="{canonical}">\n'
+        f'    {og_image}'
+    )
+    return _SEO_HEAD_RE.sub(
+        f"<!--SEO_HEAD-->{seo_head}<!--/SEO_HEAD-->",
+        tmpl,
+    )
+
+
 def render_homepage_html() -> bytes:
-    """
-    Возвращает кешированные байты index.html с canonical + Open Graph в SEO_HEAD.
-    title/description извлекаются из index.html (единственный источник истины).
-    Кеш действителен до перезапуска (SITE_URL фиксирован в рантайме).
-    """
-    global _homepage_cache
-    if _homepage_cache is None:
-        tmpl = _get_template()
-        title, description = _extract_title_description(tmpl)
-        seo_head = _build_homepage_seo_head(title, description)
-        rendered = _SEO_HEAD_RE.sub(
-            f"<!--SEO_HEAD-->{seo_head}<!--/SEO_HEAD-->",
-            tmpl,
-        )
-        _homepage_cache = rendered.encode("utf-8")
-    return _homepage_cache
+    """Кешированные байты главной (index.html); пересобираются при смене mtime шаблона."""
+    return _cached_page("index.html", _render_homepage)
 
 
 def render_about_html() -> bytes:
-    """
-    Возвращает кешированные байты about.html с canonical + Open Graph в SEO_HEAD.
-    title/description извлекаются из about.html (единственный источник истины).
-    Кеш действителен до перезапуска (SITE_URL фиксирован в рантайме).
-    """
-    global _about_cache
-    if _about_cache is None:
-        tmpl = _get_about_template()
-        title, description = _extract_title_description(tmpl)
-        base = (SITE_URL or "").rstrip("/")
-        canonical = html.escape(f"{base}/about.html")
-        og_image = _build_og_image_meta(base)
-        title_esc = html.escape(title)
-        description_esc = html.escape(description)
-        seo_head = (
-            f"<title>{title_esc}</title>\n"
-            f'    <meta name="description" content="{description_esc}">\n'
-            f'    <link rel="canonical" href="{canonical}">\n'
-            f'    <meta property="og:type" content="website">\n'
-            f'    <meta property="og:title" content="{title_esc}">\n'
-            f'    <meta property="og:description" content="{description_esc}">\n'
-            f'    <meta property="og:url" content="{canonical}">\n'
-            f'    {og_image}'
-        )
-        rendered = _SEO_HEAD_RE.sub(
-            f"<!--SEO_HEAD-->{seo_head}<!--/SEO_HEAD-->",
-            tmpl,
-        )
-        _about_cache = rendered.encode("utf-8")
-    return _about_cache
+    """Кешированные байты about.html; пересобираются при смене mtime шаблона."""
+    return _cached_page("about.html", _render_about)
 
 
 def render_report_html(row: dict) -> str:
@@ -499,7 +500,7 @@ def render_report_html(row: dict) -> str:
     SEO_HEAD → title/description/canonical.
     SEO_CONTENT → видимый div.single-result-formatted (без кеша, на лету).
     """
-    tmpl = _get_template()
+    _, tmpl = _get_template("index.html")
 
     seo_head = _build_seo_head_html(row)
     route_html = build_route_html(row)
