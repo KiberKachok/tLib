@@ -9,11 +9,18 @@ test.describe('Security', () => {
   test('Консоль без ошибок @critical @smoke @security', async ({ page }) => {
     const errors = [];
     page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
+      if (msg.type() === 'error') errors.push({ text: msg.text(), url: msg.location()?.url || '' });
     });
     await gotoMainReady(page);
-    const criticalErrors = errors.filter((e) => !e.includes('extension') && !e.includes('favicon'));
-    expect(criticalErrors.length).toBe(0);
+    const isBenign = (e) =>
+      e.text.includes('extension') ||
+      e.text.includes('favicon') ||
+      // штатный 401 анонима (authService.getCurrentUser): /api/auth/me → 401 по контракту
+      e.url.includes('/api/auth/me') ||
+      // резервный матч: в части сборок Chromium location().url может быть пустым
+      (e.url === '' && e.text.includes('Failed to load resource') && e.text.includes('401'));
+    const criticalErrors = errors.filter((e) => !isBenign(e));
+    expect(criticalErrors, criticalErrors.map((e) => `${e.text} ${e.url}`).join('\n')).toEqual([]);
   });
 
   test('XSS protection (script в поле маршрута) @smoke @security', async ({ page }) => {
