@@ -22,7 +22,7 @@ def build_text_filters(form_data, query, params, shifr, dop_shifr):
     Строит фильтры для текстовых полей: Маршрут, Район, Автор.
     
     Особенности:
-    - Маршрут: извлекает Шифр и ДопШифр из начала строки, затем поиск по словам
+    - Маршрут: если поле целиком — шифр (4825, 4825-TLIB), ищет по Шифр/ДопШифр, иначе по словам
     - Район: поиск одновременно в полях Район и РайонОбщий (OR логика)
     - Автор: стандартный поиск по словам (все слова должны присутствовать)
     
@@ -43,7 +43,7 @@ def build_text_filters(form_data, query, params, shifr, dop_shifr):
     for field in text_fields:
         value = get_form_value(form_data, field)
         if value:
-            # Специальная обработка для поля Маршрут: извлечение Шифр/ДопШифр из начала строки
+            # Специальная обработка для поля Маршрут: поле целиком — шифр или текст для поиска по словам
             if field == 'Маршрут':
                 parsed = parse_route_field(value)
                 
@@ -64,7 +64,7 @@ def build_text_filters(form_data, query, params, shifr, dop_shifr):
                     params.append(parsed['dopshifr'])
                     app_logger.debug(f"    Добавлен фильтр из Маршрут: LOWER(ДопШифр) = LOWER({parsed['dopshifr']})")
                 
-                # Поиск по оставшемуся тексту маршрута (если не пустой)
+                # Поиск по тексту маршрута (если поле не шифр)
                 if parsed['route']:
                     words = extract_words_from_text(parsed['route'])
                     for word in words:

@@ -117,17 +117,40 @@ class TestParseRouteField(unittest.TestCase):
         from services.database.query_helpers import parse_route_field
         return parse_route_field(value)
 
-    def test_shifr_only(self):
+    def test_number_with_text_is_route(self):
         result = self._parse("123 горный маршрут")
-        self.assertEqual(result["shifr"], "123")
+        self.assertIsNone(result["shifr"])
         self.assertIsNone(result["dopshifr"])
-        self.assertEqual(result["route"], "горный маршрут")
+        self.assertEqual(result["route"], "123 горный маршрут")
 
-    def test_shifr_with_dopshifr(self):
+    def test_shifr_dopshifr_with_text_is_route(self):
         result = self._parse("42-TST горный")
-        self.assertEqual(result["shifr"], "42")
-        self.assertEqual(result["dopshifr"], "TST")
-        self.assertEqual(result["route"], "горный")
+        self.assertIsNone(result["shifr"])
+        self.assertIsNone(result["dopshifr"])
+        self.assertEqual(result["route"], "42-TST горный")
+
+    def test_shifr_alone(self):
+        result = self._parse("4825")
+        self.assertEqual(result["shifr"], "4825")
+        self.assertIsNone(result["dopshifr"])
+        self.assertEqual(result["route"], "")
+
+    def test_shifr_with_hash_and_spaces(self):
+        result = self._parse("  #4825-TLIB  ")
+        self.assertEqual(result["shifr"], "4825")
+        self.assertEqual(result["dopshifr"], "TLIB")
+        self.assertEqual(result["route"], "")
+
+    def test_kilometer_is_route(self):
+        result = self._parse("356 км")
+        self.assertIsNone(result["shifr"])
+        self.assertEqual(result["route"], "356 км")
+
+    def test_ordinal_kilometer_is_route(self):
+        result = self._parse("105-й км трассы")
+        self.assertIsNone(result["shifr"])
+        self.assertIsNone(result["dopshifr"])
+        self.assertEqual(result["route"], "105-й км трассы")
 
     def test_text_only(self):
         result = self._parse("горный маршрут без шифра")
@@ -266,6 +289,13 @@ class TestBuildSearchQueryTextFilters(unittest.TestCase):
         query, params = _build({"Маршрут": "42-TST"})
         self.assertIn("Шифр = ?", query)
         self.assertIn("LOWER(ДопШифр) = LOWER(?)", query)
+
+    def test_marshrut_number_with_text_is_word_search(self):
+        query, params = _build({"Маршрут": "356 км"})
+        self.assertNotIn("Шифр = ?", query)
+        self.assertIn("LOWER(Маршрут) LIKE LOWER(?)", query)
+        self.assertIn("%356%", params)
+        self.assertIn("%км%", params)
 
 
 class TestBuildSearchQueryDateFilters(unittest.TestCase):
