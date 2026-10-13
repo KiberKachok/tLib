@@ -960,6 +960,18 @@ async def do_submit_edit(
     Возвращает {"ok": True, "id": norm_id} или {"error": ..., "_status": ...}.
     """
     zagruzil_id_orig = get_published_zagruzil_id(orig_id)
+    # Поля, которых нет в форме правки (СтарыйID, КоличествоСтраниц), берём из
+    # опубликованного JSON в data/ — иначе правка через сайт затирает их.
+    # КоличествоСтраниц в tlib.db не хранится, поэтому источник — только data/.
+    published_json, existing_archive = find_published_pair(orig_id)
+    published: dict = {}
+    if published_json is not None:
+        try:
+            published = read_json(published_json)
+        except Exception as e:
+            app_logger.error(
+                f"[upload] Ошибка чтения {published_json.name} при правке {orig_id}: {e}", exc_info=True
+            )
 
     norm_id = normalized_id(shifr, dop)
     staging = staging_dir()
@@ -976,7 +988,6 @@ async def do_submit_edit(
             return {"error": f"Файл превышает максимально допустимый размер ({size_gb:.0f} ГБ)", "_status": 413}
         archive_size = file_size
     elif not remove_file:
-        _, existing_archive = find_published_pair(orig_id)
         if existing_archive is not None:
             file_ext = existing_archive.suffix.lower().lstrip('.')
             archive_size = existing_archive.stat().st_size
@@ -990,7 +1001,9 @@ async def do_submit_edit(
         return {"error": "Нельзя сохранить правку без файла отчёта", "no_file": True, "_status": 400}
 
     pages: int | None = None
-    if has_new_file and file_ext == 'pdf' and file_path:
+    if not has_new_file and not is_orphan:
+        pages = published.get("КоличествоСтраниц")
+    elif has_new_file and file_ext == 'pdf' and file_path:
         try:
             from services.conversion.pdf_to_png_service import count_pdf_pages
             pages = count_pdf_pages(file_path) or None
@@ -1020,6 +1033,8 @@ async def do_submit_edit(
         "ЗагрузилИмя": zagruzil_imya,
         "ЗагрузилID": zagruzil_id_orig,
         "ДатаВремяЗагрузки": now_iso,
+        # На СтарыйID держатся редиректы старых ссылок (doc.aspx?id=, /png/, /files/)
+        "СтарыйID": published.get("СтарыйID"),
     }
 
     if is_admin(user):

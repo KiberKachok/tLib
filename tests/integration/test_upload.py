@@ -544,6 +544,65 @@ class TestSubmitEdit:
         assert r.status_code == 200
         assert r.json().get("ok") is True
 
+    def _publish_in_data(self, tmp_dirs: dict) -> None:
+        """Кладёт в data/ опубликованный 00001-TST с полями, которых нет в форме правки."""
+        (tmp_dirs["data"] / "00001-TST.json").write_text(
+            json.dumps({"Шифр": 1, "ДопШифр": "TST", "СтарыйID": 12345, "КоличествоСтраниц": 7}),
+            encoding="utf-8",
+        )
+        (tmp_dirs["data"] / "00001-TST.pdf").write_bytes(b"%PDF fake")
+
+    def test_edit_without_file_keeps_old_id_and_pages(
+        self, client, logged_in_admin, tlib_db_path, tmp_dirs, mailbox
+    ):
+        # Правка только метаданных: архив остаётся в data/, публикация идёт json_only
+        self._publish_in_data(tmp_dirs)
+        r_edit = client.post(
+            "/api/upload/submit-edit",
+            data={
+                "edit_orig_id": "00001-TST",
+                "shifr": 1,
+                "dopshifr": "TST",
+                "marshrut": "Правка без файла",
+                "god": 2024,
+            },
+        )
+        assert r_edit.status_code == 200, r_edit.text
+        r_pub = client.post(
+            "/api/upload/publish",
+            data={
+                "id": "00001-TST",
+                "shifr": 1,
+                "dopshifr": "TST",
+                "marshrut": "Правка без файла",
+                "god": 2024,
+                "no_email": True,
+            },
+        )
+        assert r_pub.status_code == 200, r_pub.text
+        published = json.loads((tmp_dirs["go"] / "00001-TST.json").read_text(encoding="utf-8"))
+        assert published["СтарыйID"] == 12345
+        assert published["КоличествоСтраниц"] == 7
+
+    def test_edit_with_code_change_keeps_old_id(
+        self, client, logged_in_admin, tlib_db_path, tmp_dirs, mailbox
+    ):
+        self._publish_in_data(tmp_dirs)
+        r = client.post(
+            "/api/upload/submit-edit",
+            data={
+                "edit_orig_id": "00001-TST",
+                "shifr": 600,
+                "dopshifr": "RENM",
+                "marshrut": "Переименованный",
+                "god": 2024,
+            },
+            files={"file": ("test.zip", b"PK edit", "application/zip")},
+        )
+        assert r.status_code == 200, r.text
+        staged = json.loads((tmp_dirs["staging"] / "00600-RENM.json").read_text(encoding="utf-8"))
+        assert staged["СтарыйID"] == 12345
+
 
 # ---------------------------------------------------------------------------
 # publish с .editmeta — создание .delete-триггера при смене кода
