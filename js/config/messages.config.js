@@ -14,6 +14,7 @@ export const MESSAGES = deepFreeze({
     CLIPBOARD_NOT_SUPPORTED: 'Функция копирования не поддерживается в вашем браузере.',
     COPY_FAILED: 'Не удалось скопировать ссылку.',
     FILE_NOT_AVAILABLE: 'Файл отчета отсутствует',
+    FILE_UNPACKING: 'Распаковываем архив...',
     FILE_WAIT_TIMEOUT: 'Не дождались распаковки архива, попробуйте ещё раз',
     FILE_NOT_IN_ARCHIVE: 'Файл не найден в архиве',
     STORAGE_UNAVAILABLE: 'Хранилище данных недоступно',

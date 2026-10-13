@@ -1118,10 +1118,16 @@ th::before {
     margin-right: 4px;
 }
 
-/* Клик по «Прочее» ждёт распаковку: ссылка тускнеет, курсор — ожидание */
+/* Клик по «Прочее» ждёт распаковку: ссылка тускнеет, рядом подпись, курсор — ожидание */
 .file-list-inline a.is-waiting {
     opacity: .5;
     pointer-events: none;
+}
+
+.other-file-status {
+    color: var(--color-text-muted);
+    font-size: .9em;
+    margin-right: 4px;
 }
 
 body.is-waiting-file {

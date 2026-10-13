@@ -54,6 +54,8 @@ const FILE_CHECK_TIMEOUT_MS = 3000;
  * Клик по файлу «Прочее»: прямая ссылка /cache/… на неподготовленном кеше — 404.
  * Запускает подготовку и скачивает файл в этой вкладке, когда HEAD совпал по размеру
  * (распаковка пишет файл на место целиком, полуфайл HEAD застать не должен по длине).
+ * Подпись «распаковываем» — только когда файл не отдался с первой проверки: на готовом кеше
+ * она бы мелькнула. Курсора на телефоне нет, без подписи там видна лишь потускневшая ссылка.
  * @param {HTMLAnchorElement} link
  * @param {string} archiveName
  */
@@ -62,6 +64,7 @@ async function downloadOtherFile(link, archiveName) {
 
     link.classList.add('is-waiting');
     document.body.classList.add('is-waiting-file');
+    let status = null;
     // Размер неизвестен (нет в списке файлов) — сверять не с чем, достаточно ответа 200
     const expectedSize = link.dataset.size;
     const checkSize = Boolean(expectedSize) && expectedSize !== '0';
@@ -98,6 +101,13 @@ async function downloadOtherFile(link, archiveName) {
                 throw new Error(CONSTANTS.MESSAGES.FILE_NOT_IN_ARCHIVE);
             }
 
+            if (!status) {
+                status = document.createElement('span');
+                status.className = 'other-file-status';
+                status.textContent = CONSTANTS.MESSAGES.FILE_UNPACKING;
+                link.after(status);
+            }
+
             await sleep(delay);
             delay = Math.min(delay * CONSTANTS.TIMING.RESOLVE_BACKOFF_MULTIPLIER, CONSTANTS.TIMING.RESOLVE_MAX_DELAY);
         }
@@ -105,6 +115,7 @@ async function downloadOtherFile(link, archiveName) {
     } catch (error) {
         errorHandler.handle(error instanceof Error ? error.message : CONSTANTS.MESSAGES.FILE_WAIT_TIMEOUT);
     } finally {
+        status?.remove();
         link.classList.remove('is-waiting');
         if (!document.querySelector('a.other-file-link.is-waiting')) {
             document.body.classList.remove('is-waiting-file');
