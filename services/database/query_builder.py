@@ -1,6 +1,8 @@
 # Query Builder для построения SQL запросов
 # Описание: Координатор построения SQL запросов для поиска в базе данных.
 #           build_search_query() - главная функция-координатор, объединяет фильтры из модулей.
+#           build_shifr_query() - тот же запрос только по шифру: по нему пустой поиск
+#           показывает единственный отчёт с этим шифром, не глядя на остальные поля.
 #           Делегирует построение фильтров специализированным модулям:
 #           - query_filters.build_text_filters() - текстовые поля (Маршрут, Район, Автор)
 #           - query_filters.build_category_filters() - категории с максимальной сложностью
@@ -17,7 +19,7 @@ from .query_filters import (
     build_category_filters,
     build_date_filters
 )
-from .query_helpers import get_form_value
+from .query_helpers import get_form_value, parse_route_field
 
 # Whitelist допустимых столбцов сортировки и соответствующих SQL-выражений ORDER BY.
 # Имена столбцов из клиента никогда не вставляются напрямую в SQL.
@@ -119,4 +121,29 @@ def build_search_query(form_data, kategoria_list=None):
 
     app_logger.debug(f"  build_search_query: завершено. Параметров: {len(params)}, ORDER BY {order_sql}")
     return query, params
+
+
+def build_shifr_query(form_data):
+    """
+    Строит запрос только по шифру формы: поля Шифр, ДопШифр и Маршрут, если он целиком шифр.
+
+    Нужен, когда полный поиск пуст: если шифру соответствует ровно один отчёт, показывается он,
+    а остальные поля не учитываются — их могли оставить от прошлого поиска. Условия на шифр
+    строит сам build_search_query, поэтому полная выдача — всегда часть выдачи этого запроса.
+
+    Args:
+        form_data: Данные формы (dict-like объект) с параметрами поиска
+
+    Returns:
+        tuple | None: (query, params) или None, если шифра в форме нет (один ДопШифр — не шифр)
+    """
+    route = get_form_value(form_data, 'Маршрут')
+    route_is_shifr = bool(parse_route_field(route)['shifr'])
+    if not get_form_value(form_data, 'Шифр') and not route_is_shifr:
+        return None
+
+    shifr_form = {field: form_data.get(field) for field in ('Шифр', 'ДопШифр')}
+    if route_is_shifr:
+        shifr_form['Маршрут'] = route
+    return build_search_query(shifr_form)
     

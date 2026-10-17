@@ -7,6 +7,8 @@
 #           Поиск по категориям находит максимальную категорию похода и проверяет её вхождение в диапазон поиска.
 #           Поддерживает пагинацию через параметры limit и offset: при их наличии возвращает страницу данных с метаданными (total, has_more).
 #           Без параметров пагинации работает в обратно совместимом режиме (возвращает все результаты).
+#           Пустой поиск с шифром повторяется только по шифру: если отчёт ровно один, возвращается он,
+#           а остальные поля формы не учитываются (их могли оставить от прошлого поиска).
 #           Ограничение тяжёлых запросов: запросы без селективных фильтров проверяются через COUNT, при превышении порога
 #           ставятся в очередь через HeavyQueryLimiter для ограничения параллельного выполнения.
 #           Использует параметризованные запросы для защиты от SQL Injection, логирует каждый этап обработки запроса.
@@ -23,7 +25,7 @@ import time
 import json
 
 # Импорт services
-from services.database import build_search_query, count_search, execute_search
+from services.database import build_search_query, build_shifr_query, count_search, execute_search
 from services.database.search_limiter import is_light_query
 from services.database.query_helpers import describe_search_form
 from services.id_utils import make_norm_id
@@ -169,16 +171,38 @@ async def search_database(request: Request):
                 db_path_str, kategoria_list, query, params,
                 limit, offset, known_total
             )
-            wait_ms = round(wait_ms + wait, 2)
-            sql_ms = round(sql_ms + sql, 2)
+            wait_ms += wait
+            sql_ms += sql
+
+            # Пустая выдача — в лог то, что было заполнено: по строке запрос повторяется на копии
+            # базы и находится причина нуля. Строка выдачи с результатами не меняется, кроме
+            # отчёта, найденного по шифру (by_shifr): поиск по всей форме тогда тоже был пуст
+            log_fields = {}
+            if offset == 0 and not results:
+                log_fields["filled"] = describe_search_form(form_data)
+
+                # Шифр, по которому есть ровно один отчёт, важнее остальных полей: показываем
+                # этот отчёт. Полная выдача — часть выдачи по шифру, поэтому проверять нужно,
+                # только когда она пуста
+                shifr_query = build_shifr_query(form_data)
+                if shifr_query:
+                    (shifr_results, _), wait, sql = await _run_timed(
+                        execute_search,
+                        db_path_str, kategoria_list, *shifr_query,
+                        None, 0, None
+                    )
+                    wait_ms += wait
+                    sql_ms += sql
+                    if len(shifr_results) == 1:
+                        results, total_count = shifr_results, 1
+                        log_fields["by_shifr"] = True
+
+            wait_ms = round(wait_ms, 2)
+            sql_ms = round(sql_ms, 2)
 
             _annotate_hidden(results, request.app.state)
 
             time_ms = round((time.time() - start_time) * 1000, 2)
-
-            # Пустая выдача — в лог то, что было заполнено: по строке запрос повторяется на копии
-            # базы и находится причина нуля. Строка выдачи с результатами не меняется
-            filled = {"filled": describe_search_form(form_data)} if offset == 0 and not results else {}
 
             if limit is not None:
                 # Режим пагинации
@@ -190,7 +214,7 @@ async def search_database(request: Request):
                              time_ms=time_ms,
                              wait_ms=wait_ms,
                              sql_ms=sql_ms,
-                             **filled)
+                             **log_fields)
 
                 response_data = {
                     "success": True,
@@ -209,7 +233,7 @@ async def search_database(request: Request):
                              time_ms=time_ms,
                              wait_ms=wait_ms,
                              sql_ms=sql_ms,
-                             **filled)
+                             **log_fields)
 
                 response_data = {
                     "success": True,

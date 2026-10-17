@@ -371,5 +371,49 @@ class TestBuildSearchQueryCategories(unittest.TestCase):
         self.assertNotIn("IN (", query)
 
 
+# ---------------------------------------------------------------------------
+# build_shifr_query — запрос только по шифру
+# ---------------------------------------------------------------------------
+
+
+class TestBuildShifrQuery(unittest.TestCase):
+    def _shifr(self, form_data: dict):
+        from services.database.query_builder import build_shifr_query
+        return build_shifr_query(form_data)
+
+    def test_no_shifr_returns_none(self):
+        self.assertIsNone(self._shifr({"Маршрут": "Эльбрус", "Тип": "горный"}))
+
+    def test_dopshifr_alone_is_not_shifr(self):
+        self.assertIsNone(self._shifr({"ДопШифр": "TLIB", "Тип": "горный"}))
+
+    def test_shifr_field_drops_other_filters(self):
+        query, params = self._shifr({
+            "Шифр": "42", "Маршрут": "Эльбрус", "Тип": "горный", "Автор": "Иванов", "ГодС": "2010",
+        })
+        self.assertIn("Шифр = ?", query)
+        self.assertNotIn("LIKE", query)
+        self.assertNotIn("Тип", query)
+        self.assertNotIn("Год >=", query)
+        self.assertEqual(params, ["42"])
+
+    def test_shifr_field_keeps_dopshifr(self):
+        query, params = self._shifr({"Шифр": "42", "ДопШифр": "TST", "Тип": "горный"})
+        self.assertIn("LOWER(ДопШифр) = LOWER(?)", query)
+        self.assertEqual(params, ["42", "TST"])
+
+    def test_route_shifr_without_dopshifr_is_strict(self):
+        query, params = self._shifr({"Маршрут": "42", "Тип": "горный"})
+        self.assertIn("Шифр = ?", query)
+        self.assertIn("ДопШифр IS NULL", query)
+        self.assertEqual(params, ["42"])
+
+    def test_route_shifr_with_dopshifr(self):
+        query, params = self._shifr({"Маршрут": "#42-TST", "Район": "Кавказ"})
+        self.assertIn("LOWER(ДопШифр) = LOWER(?)", query)
+        self.assertNotIn("Район", query)
+        self.assertEqual(params, ["42", "TST"])
+
+
 if __name__ == "__main__":
     unittest.main()

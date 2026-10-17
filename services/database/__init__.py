@@ -11,7 +11,7 @@
 # - search_limiter.py:   Ограничение параллельных тяжёлых запросов
 
 from .connection import open_tlib_db
-from .query_builder import build_search_query
+from .query_builder import build_search_query, build_shifr_query
 from .reference_loader import (
     load_reference_lists,
     load_redirect_table
@@ -22,6 +22,7 @@ from .search_executor import count_search, execute_search
 __all__ = [
     'open_tlib_db',
     'build_search_query',
+    'build_shifr_query',
     'load_reference_lists',
     'load_redirect_table',
     'HeavyQueryLimiter',
