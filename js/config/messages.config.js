@@ -32,9 +32,15 @@ export const MESSAGES = deepFreeze({
     UNKNOWN_ERROR: 'Неизвестная ошибка',
     GENERIC_ERROR: 'Произошла ошибка',
     LOADING_MORE: 'Загружается еще...',
-    // Сообщения стадий подготовки кеша (png-viewer)
+    // Стадии подготовки кеша: ключи — CACHE_STAGE_* из config/cache.py. Прогресс под стадией
+    // (detail) приходит с сервера уже по-русски. Показывают превью картинок и треков,
+    // ссылки «Прочее» и png-viewer
     CACHE_TIMEOUT: 'Превышено время ожидания',
-    CACHE_STAGE_STARTING: 'Подготовка кеша начинается',
-    CACHE_STAGE_EXTRACTING: 'Файлы извлекаются из архива',
-    CACHE_STAGE_CONVERTING: 'Файлы обрабатываются для быстрого просмотра'
+    CACHE_STAGES: {
+        starting: 'Подготовка кеша начинается',
+        extracting: 'Файлы извлекаются из архива',
+        converting: 'Файлы обрабатываются для быстрого просмотра',
+    },
+    CACHE_STAGE_UNKNOWN: 'Подготовка...',
+    PAGES_PREPARING: 'Подготовка страниц...'
 });

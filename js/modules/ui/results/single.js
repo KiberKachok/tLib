@@ -54,8 +54,10 @@ const FILE_CHECK_TIMEOUT_MS = 3000;
  * Клик по файлу «Прочее»: прямая ссылка /cache/… на неподготовленном кеше — 404.
  * Запускает подготовку и скачивает файл в этой вкладке, когда HEAD совпал по размеру
  * (распаковка пишет файл на место целиком, полуфайл HEAD застать не должен по длине).
- * Подпись «распаковываем» — только когда файл не отдался с первой проверки: на готовом кеше
- * она бы мелькнула. Курсора на телефоне нет, без подписи там видна лишь потускневшая ссылка.
+ * Подпись с этапом и прогрессом подготовки (GET /contents) — только когда файл не отдался с первой
+ * проверки: на готовом кеше она бы мелькнула. Курсора на телефоне нет, без подписи там видна лишь
+ * потускневшая ссылка. /contents ответил 200 — подготовка закончилась: файла, которого HEAD не
+ * нашёл, в архиве нет, и ждать до лимита попыток незачем (prep отвечает один раз — «started»).
  * @param {HTMLAnchorElement} link
  * @param {string} archiveName
  */
@@ -65,6 +67,7 @@ async function downloadOtherFile(link, archiveName) {
     link.classList.add('is-waiting');
     document.body.classList.add('is-waiting-file');
     let status = null;
+    let cacheReady = false;
     // Размер неизвестен (нет в списке файлов) — сверять не с чем, достаточно ответа 200
     const expectedSize = link.dataset.size;
     const checkSize = Boolean(expectedSize) && expectedSize !== '0';
@@ -97,16 +100,26 @@ async function downloadOtherFile(link, archiveName) {
                 return;
             }
 
-            if (prep?.status === 'ready' && resp?.status === 404) {
+            if ((prep?.status === 'ready' || cacheReady) && resp?.status === 404) {
                 throw new Error(CONSTANTS.MESSAGES.FILE_NOT_IN_ARCHIVE);
+            }
+
+            const progress = await cacheWarmService.getPrepareProgress(archiveName);
+            // Подготовка закончилась между HEAD и /contents — файл уже мог лечь на диск: перепроверка сразу
+            if (progress?.status === 'ready' && !cacheReady) {
+                cacheReady = true;
+                continue;
             }
 
             if (!status) {
                 status = document.createElement('span');
                 status.className = 'other-file-status';
-                status.textContent = CONSTANTS.MESSAGES.FILE_UNPACKING;
                 link.after(status);
             }
+            const stageText = progress?.status === 'preparing' && CONSTANTS.MESSAGES.CACHE_STAGES[progress.stage];
+            status.textContent = stageText
+                ? (progress.detail ? `${stageText}: ${progress.detail}` : stageText)
+                : CONSTANTS.MESSAGES.FILE_UNPACKING;
 
             await sleep(delay);
             delay = Math.min(delay * CONSTANTS.TIMING.RESOLVE_BACKOFF_MULTIPLIER, CONSTANTS.TIMING.RESOLVE_MAX_DELAY);

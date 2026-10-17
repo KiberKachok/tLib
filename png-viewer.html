@@ -14,6 +14,7 @@
          При добавлении/удалении/переименовании .js файла — обновите этот список. -->
     <link rel="modulepreload" href="js/utils/freeze.js">
     <link rel="modulepreload" href="js/config/api.config.js">
+    <link rel="modulepreload" href="js/config/messages.config.js">
     <link rel="modulepreload" href="js/png-viewer.js">
     <style>
         * {
@@ -206,9 +207,15 @@
             color: var(--color-text-secondary);
         }
 
-        .empty-state h2 {
-            font-size: 18px;
-            margin-bottom: 8px;
+        /* Ожидание подготовки архива: спиннер, этап и прогресс (_showPreparing в png-viewer.js) */
+        .empty-state .loading-spinner {
+            margin: 0 auto 12px;
+        }
+
+        .empty-state .preparing-detail {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: .8;
         }
 
         /* SVG Icons */
@@ -282,8 +289,10 @@
 
         <div class="viewport" id="viewport">
             <div class="viewport-inner" id="viewportInner">
-                <div class="empty-state">
+                <div class="empty-state is-preparing">
                     <div class="loading-spinner"></div>
+                    <p class="preparing-message"></p>
+                    <p class="preparing-detail"></p>
                 </div>
             </div>
         </div>

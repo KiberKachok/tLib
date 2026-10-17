@@ -1,7 +1,7 @@
 // Описание: Shared утилиты для всех viewer-стратегий (PDF/Image/Track):
 //   - DOM-утилиты (setActiveLink, showSingleContainer, queryLinks, setupClickDelegates, findLinkByDataset, safeFocusElement)
 //   - HTML-строители (spinnerPlaceholderHtml, prepareFileLink, prepareLinkContext, buildViewersBlockHtml, buildOtherLinkHtml, SVG-иконки)
-//   - Viewer lifecycle (activateViewerIframe, showLoadingMessage, showGesturePrompt, showViewerError, PLACEHOLDER_SELECTOR, STAGE_TO_MESSAGE)
+//   - Viewer lifecycle (activateViewerIframe, showLoadingMessage, showGesturePrompt, showViewerError, PLACEHOLDER_SELECTOR)
 //   - Async loading (resolveAndWait)
 //   - Height management (adjustActiveViewerHeight, scheduleHeightAdjust, scheduleHeightAdjustOnLoad, VIEWER_CONFIGS, findVisibleViewer, parsePx)
 //   - Viewer switch (prepareViewerSwitch — общий для PDF и Image)
@@ -366,18 +366,11 @@ export function buildOtherLinkHtml(prep) {
 // VIEWER LIFECYCLE
 // =============================================================================
 
-/** Маппинг стадии подготовки кеша на сообщение из CONSTANTS.MESSAGES */
-const STAGE_TO_MESSAGE = {
-    starting:   CONSTANTS.MESSAGES.CACHE_STAGE_STARTING,
-    extracting: CONSTANTS.MESSAGES.CACHE_STAGE_EXTRACTING,
-    converting: CONSTANTS.MESSAGES.CACHE_STAGE_CONVERTING
-};
-
 /**
  * Показывает сообщение загрузки с деталями стадии.
  * @param {HTMLElement} container - контейнер viewer'а
  * @param {string} message - основное сообщение
- * @param {string} [detail] - дополнительные детали (например "PDF 3/10")
+ * @param {string} [detail] - прогресс с сервера (например "40 из 120 файлов")
  */
 export function showLoadingMessage(container, message, detail = '') {
     const placeholder = container.querySelector(PLACEHOLDER_SELECTOR);
@@ -496,7 +489,7 @@ export async function resolveAndWait(container, archiveName, kind, zipPath, { ma
         }
 
         // preparing — показываем прогресс
-        const message = STAGE_TO_MESSAGE[res.stage] || 'Подготовка...';
+        const message = CONSTANTS.MESSAGES.CACHE_STAGES[res.stage] || CONSTANTS.MESSAGES.CACHE_STAGE_UNKNOWN;
         showLoadingMessage(container, message, res.detail);
 
         await sleep(delay);

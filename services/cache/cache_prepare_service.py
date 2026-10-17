@@ -24,6 +24,7 @@ from config import (
     CACHE_STATUS_PREPARING, CACHE_STATUS_NONE, CACHE_STATUS_ERROR,
     CACHE_FILE_STATUS_PARTIAL,
     CACHE_STAGE_STARTING, CACHE_STAGE_CONVERTING,
+    CACHE_DETAIL_PAGES, CACHE_RETRY_AFTER_MS,
     PNG_PAGES_TOTAL_FILENAME,
 )
 
@@ -144,7 +145,7 @@ def write_prepare_status(archive_name: str, *, stage: str, sub: str = "", detail
         archive_name: имя архива
         stage: стадия подготовки (starting, extracting, converting)
         sub: подстадия (gps, pdf, images)
-        detail: детали (например, "PDF 3/10")
+        detail: прогресс для читателя по шаблону CACHE_DETAIL_* (например, "PDF 3 из 10")
         pages_total: общее количество страниц PDF (0 = не указано)
         converting_path: путь к конвертируемому PDF внутри архива (пустой = не указано)
     """
@@ -225,6 +226,35 @@ def is_preparing(archive_name: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def prepare_progress(archive_name: str) -> dict | None:
+    """
+    Ответ «кеш готовится» для читателя, который ждёт файлы архива: этап и прогресс из _prepare.json.
+
+    Только пока meta нет или она устарела: полная подготовка и конвертация standalone PDF удаляют
+    _meta.json в начале (_purge_old_content), поэтому файлы, которых ещё нет на диске, появятся.
+    Докрутка PDF тоже пишет _prepare.json, но идёт при валидной meta и новых файлов не создаёт —
+    отсутствующий в это время файл не появится, и ждать его нечего.
+
+    Args:
+        archive_name: имя архива
+
+    Returns:
+        {"status": "preparing", "stage", "detail", "retry_after"} или None
+    """
+    meta = read_meta(archive_name)
+    if meta is not None and is_cache_valid_from_meta(meta):
+        return None
+    if not is_preparing(archive_name):
+        return None
+    prepare = read_prepare_status(archive_name)
+    return {
+        "status": CACHE_STATUS_PREPARING,
+        "stage": prepare.get("stage", ""),
+        "detail": prepare.get("detail", ""),
+        "retry_after": CACHE_RETRY_AFTER_MS,
+    }
 
 
 def _cleanup_stale(archive_name: str) -> None:
@@ -460,9 +490,8 @@ async def convert_standalone_pdf(pdf_path: Path, archive_name: str, stats_collec
                                  pages_total=pre_pages, converting_path=pdf_path.name)
         
         def _pdf_progress(done, total):
-            pct = int(done / total * 100) if total > 0 else 0
             write_prepare_status(archive_name, stage=CACHE_STAGE_CONVERTING,
-                                 sub="pdf", detail=f"{done}/{total} ({pct}%)",
+                                 sub="pdf", detail=CACHE_DETAIL_PAGES.format(done=done, total=total),
                                  pages_total=total, converting_path=pdf_path.name)
         
         success, result = await convert_pdf_to_directory(pdf_path, png_dir, pdf_path.stem, on_progress=_pdf_progress)
@@ -614,9 +643,8 @@ async def resume_pdf_conversion(archive_name: str, png_dir_rel: str) -> None:
         from services.conversion.pdf_to_png_service import convert_pdf_to_directory
 
         def _pdf_progress(done, total):
-            pct = int(done / total * 100) if total > 0 else 0
             write_prepare_status(archive_name, stage=CACHE_STAGE_CONVERTING,
-                                 sub="pdf", detail=f"{done}/{total} ({pct}%)",
+                                 sub="pdf", detail=CACHE_DETAIL_PAGES.format(done=done, total=total),
                                  pages_total=total, converting_path=zip_member)
 
         png_dir = get_png_dir_path(archive_name, zip_member)

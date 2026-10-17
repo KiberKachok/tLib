@@ -31,6 +31,7 @@ from services.cache.cache_prepare_service import (
     convert_standalone_pdf,
     is_preparing,
     read_prepare_status,
+    prepare_progress,
     _cleanup_stale
 )
 from services.cache.cache_service import (
@@ -275,16 +276,12 @@ async def get_cache_contents(archive_name: str, request: Request):
         if _is_hidden(request, archive_name):
             return JSONResponse({"error": "Cache not found or invalid"}, status_code=404)
 
+        progress = prepare_progress(archive_name)
+        if progress is not None:
+            return JSONResponse(progress, status_code=202)
+
         meta = read_meta(archive_name)
         if meta is None or not is_cache_valid_from_meta(meta):
-            if is_preparing(archive_name):
-                prepare = read_prepare_status(archive_name)
-                return JSONResponse({
-                    "status": CACHE_STATUS_PREPARING,
-                    "stage": prepare.get("stage", ""),
-                    "detail": prepare.get("detail", ""),
-                    "retry_after": CACHE_RETRY_AFTER_MS,
-                }, status_code=202)
             return JSONResponse({"error": "Cache not found or invalid"}, status_code=404)
 
         return JSONResponse({

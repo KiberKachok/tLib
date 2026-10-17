@@ -1,6 +1,7 @@
 // Описание: Сервис для подготовки кеша архивов (eager caching v2).
 //           prepareCache() - fire-and-forget запуск подготовки кеша при клике на таб.
 //           resolveFile() - resolve файла из кеша (image, track, all_tracks; PDF-вьюер ходит в /pages).
+//           getPrepareProgress() - этап и прогресс подготовки для ожидания файла «Прочее».
 
 import { API } from '../config/api.config.js';
 import { fetchJson } from '../utils/fetchUtils.js';
@@ -71,7 +72,28 @@ class CacheWarmService {
             return { status: 'error', message: error.message };
         }
     }
-    
+
+    /**
+     * Ход подготовки кеша по GET /contents: 202 — идёт подготовка (этап и прогресс),
+     * 200 — кеш готов (список файлов не разбирается), 404 — кеша нет и подготовки нет.
+     * @param {string} archiveName - имя архива без расширения
+     * @returns {Promise<{status: string, stage?: string, detail?: string}|null>} - null при сбое сети
+     */
+    async getPrepareProgress(archiveName) {
+        try {
+            const response = await fetch(`${API.CACHE_BASE}/${encodeURIComponent(archiveName)}/contents`);
+            if (response.status === 202) {
+                const data = await response.json();
+                return { status: 'preparing', stage: data.stage || '', detail: data.detail || '' };
+            }
+            if (response.ok) return { status: 'ready' };
+            if (response.status === 404) return { status: 'not_found' };
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
 }
 
 

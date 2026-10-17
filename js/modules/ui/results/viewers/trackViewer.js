@@ -1,6 +1,8 @@
 // Описание: Viewer-стратегия для GPS-треков (nakarte.me iframe). Реализует контракт viewer-стратегии:
 //   buildFileListHtml, buildViewersHtml, setupHandlers, autoLoad,
 //   applyHashState, getHashStateOnTabSwitch.
+//   Иконки трека (скачать, nakarte) ведут прямо в /cache/ и неактивны, пока превью трека не
+//   получило готовый файл: читатель на вкладке и так ждёт карту, второе ожидание не нужно.
 
 import { CONSTANTS, TAB_TOKENS, TAB_IDS } from '../../../../config/constants.js';
 import { escapeAttribute, validateResourceUrl } from '../../../../utils/sanitize.js';
@@ -62,22 +64,48 @@ function getGpsAllTracksUrl(files, archiveName) {
 }
 
 /**
- * Генерирует HTML ссылки GPS-трека.
- * @param {object} prep - Результат prepareFileLink
- * @param {{fileIndex: number, filesCount: number, shifr: string|number, dopShifr: string}} ctx
+ * Атрибут иконок трека (скачать, nakarte), пока превью трека не загружено: иконки ведут прямо
+ * в /cache/, и на неготовом кеше дали бы 404. Снимает его loadTrackViewer, когда превью получило
+ * готовый файл. В plain-режиме iframe грузится сразу, без resolve — ждать нечего.
+ * Отдельный атрибут, а не data-track-name: селекторы .tab-link[data-track-name] не должны цеплять иконки.
+ * @param {string} escapedTrackName - имя контейнера превью (имя трека или 'all-tracks'), уже экранированное
+ * @param {boolean} isPlainMode
  * @returns {string}
  */
-function buildGpsTrackLinkHtml(prep, { fileIndex, filesCount, shifr, dopShifr }) {
+function pendingTrackAttr(escapedTrackName, isPlainMode) {
+    return isPlainMode ? '' : ` data-pending-track="${escapedTrackName}"`;
+}
+
+/**
+ * Генерирует HTML ссылки GPS-трека.
+ * @param {object} prep - Результат prepareFileLink
+ * @param {{fileIndex: number, filesCount: number, shifr: string|number, dopShifr: string, isPlainMode: boolean}} ctx
+ * @returns {string}
+ */
+function buildGpsTrackLinkHtml(prep, { fileIndex, filesCount, shifr, dopShifr, isPlainMode }) {
     const { escapedUrl, escapedFullName, escapedDisplayName, fullName, fileSize, downloadUrl } = prep;
     const nakarteUrl = FileUtils.makeNakarteLink(downloadUrl);
     const windowName = FileUtils.makeWindowName(shifr, dopShifr, fullName);
     const sizeTitle = FileUtils.formatSizeShort(fileSize);
+    const pending = pendingTrackAttr(escapedFullName, isPlainMode);
 
     if (filesCount === 1) {
         const activeClass = fileIndex === 0 ? ' active' : '';
-        return `<a href="#" class="tab-link${activeClass}" data-track-url="${escapedUrl}" data-track-name="${escapedFullName}" title="${sizeTitle}">${escapedDisplayName}</a> <a href="${escapedUrl}" class="track-download-icon" download title="Скачать трек">${DOWNLOAD_SVG}</a> <a href="${nakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть в новой вкладке">${EXTERNAL_SVG}</a>`;
+        return `<a href="#" class="tab-link${activeClass}" data-track-url="${escapedUrl}" data-track-name="${escapedFullName}" title="${sizeTitle}">${escapedDisplayName}</a> <a href="${escapedUrl}" class="track-download-icon" download title="Скачать трек"${pending}>${DOWNLOAD_SVG}</a> <a href="${nakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть в новой вкладке"${pending}>${EXTERNAL_SVG}</a>`;
     }
-    return `<a href="#" class="tab-link" data-track-url="${escapedUrl}" data-track-name="${escapedFullName}" title="${sizeTitle}">${escapedDisplayName}</a> <a href="${nakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть в новой вкладке">${EXTERNAL_SVG}</a>`;
+    return `<a href="#" class="tab-link" data-track-url="${escapedUrl}" data-track-name="${escapedFullName}" title="${sizeTitle}">${escapedDisplayName}</a> <a href="${nakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть в новой вкладке"${pending}>${EXTERNAL_SVG}</a>`;
+}
+
+/**
+ * Превью трека получило готовый файл — его иконки (скачать, nakarte) становятся активными.
+ * @param {HTMLElement} container - контейнер превью с data-track-name
+ */
+function activateTrackIcons(container) {
+    const trackName = container.dataset.trackName || '';
+    const scope = container.closest('.tab-content') || document;
+    scope.querySelectorAll(`a[data-pending-track="${CSS.escape(trackName)}"]`).forEach(icon => {
+        icon.removeAttribute('data-pending-track');
+    });
 }
 
 /**
@@ -97,6 +125,7 @@ async function loadTrackViewer(container) {
     if (!archiveName) {
         // Fallback: загружаем напрямую без resolve (для backward compatibility)
         activateViewerIframe(container, iframe, pendingUrl);
+        activateTrackIcons(container);
         return;
     }
 
@@ -107,6 +136,7 @@ async function loadTrackViewer(container) {
     try {
         await resolveAndWait(container, archiveName, kind, zipPath);
         activateViewerIframe(container, iframe, pendingUrl);
+        activateTrackIcons(container);
     } catch (error) {
         console.error(`Error loading track ${trackName}:`, error);
         showViewerError(container, error.message || 'Не удалось загрузить трек');
@@ -121,10 +151,10 @@ async function loadTrackViewer(container) {
  * Генерирует HTML содержимого file-list для GPS-треков.
  * Включает специальную ссылку "Все треки" если треков > 1.
  * @param {object[]} files
- * @param {{shifr: string|number, dopShifr: string, archiveName?: string}} ctx
+ * @param {{shifr: string|number, dopShifr: string, archiveName?: string, isPlainMode?: boolean}} ctx
  * @returns {string}
  */
-export function buildFileListHtml(files, { shifr, dopShifr, archiveName }) {
+export function buildFileListHtml(files, { shifr, dopShifr, archiveName, isPlainMode = false }) {
     const gpsAllTracksUrl = getGpsAllTracksUrl(files, archiveName);
 
     let html = '';
@@ -138,9 +168,11 @@ export function buildFileListHtml(files, { shifr, dopShifr, archiveName }) {
         const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
         const allTracksSizeStr = FileUtils.formatSizeShort(totalSize);
 
+        const pending = pendingTrackAttr('all-tracks', isPlainMode);
+
         html += `<a href="#" class="tab-link active" data-track-url="${escapedAllTracksUrl}" title="${allTracksSizeStr}">Все треки</a> `;
-        html += `<a href="${escapedAllTracksUrl}" class="track-download-icon" download title="Скачать все треки">${DOWNLOAD_SVG}</a> `;
-        html += `<a href="${escapedNakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть все треки на nakarte.me">${EXTERNAL_SVG}</a>`;
+        html += `<a href="${escapedAllTracksUrl}" class="track-download-icon" download title="Скачать все треки"${pending}>${DOWNLOAD_SVG}</a> `;
+        html += `<a href="${escapedNakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть все треки на nakarte.me"${pending}>${EXTERNAL_SVG}</a>`;
         html += '; ';
     }
 
@@ -150,7 +182,7 @@ export function buildFileListHtml(files, { shifr, dopShifr, archiveName }) {
             console.warn(`Invalid download_url for track "${prep.fullName}": ${prep.validation.reason}`);
             return `<span class="disabled" title="${CONSTANTS.MESSAGES.INVALID_URL}">${prep.escapedDisplayName}</span>`;
         }
-        return buildGpsTrackLinkHtml(prep, { fileIndex, filesCount: files.length, shifr, dopShifr });
+        return buildGpsTrackLinkHtml(prep, { fileIndex, filesCount: files.length, shifr, dopShifr, isPlainMode });
     });
 
     html += fileLinks.join('; ');

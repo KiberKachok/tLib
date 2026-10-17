@@ -1124,6 +1124,17 @@ th::before {
     pointer-events: none;
 }
 
+/* Иконки трека ждут превью (trackViewer.js): клики выключены сразу, приглушение — через 0,3 с,
+   чтобы на готовом кеше, где превью получает файл за доли секунды, иконки не мигали */
+.file-list-inline a[data-pending-track] {
+    pointer-events: none;
+    animation: track-icon-pending 0s .3s forwards;
+}
+
+@keyframes track-icon-pending {
+    to { opacity: .35; }
+}
+
 .other-file-status {
     color: var(--color-text-muted);
     font-size: .9em;

@@ -16,13 +16,16 @@
 //   рендерит страницу want (1-based), которую сейчас показывает вьюер, затем соседей с обеих
 //   сторон, окно впереди и страницы позади неё. Пока PNG want нет на диске, сервер держит
 //   запрос до 1,5 с (long-poll) и отвечает, как только страница готова. rendering=false в ответе —
-//   для want рисовать нечего: вьюер не опрашивает до смены страницы
+//   для want рисовать нечего: вьюер не опрашивает до смены страницы. 202 — архив ещё
+//   распаковывается и директории нет: вьюер показывает этап и прогресс из ответа и ждёт,
+//   пока сервер так отвечает (холодное открытие большого архива — минута и дольше)
 //
 // СВЯЗЬ С PDF_TO_PNG_SERVICE:
 // - PNG директории создаются автоматически при кешировании PDF
 // - Паттерн именования: {stem}-png/ (например, report-png/)
 
 import { API, POSTMESSAGE_TYPES } from './config/api.config.js';
+import { MESSAGES } from './config/messages.config.js';
 
 // Configuration constants
 const CONFIG = {
@@ -55,6 +58,11 @@ const CONFIG = {
     PAGES_POLL_WAITING_MS: 300,
     PAGES_POLL_IDLE_MS: 2000,           // Текущая страница готова, сервер ещё рисует; также после сбоя запроса (мс)
     PAGES_POLL_MIN_GAP_MS: 500,         // Между запросами: листание (мс)
+
+    // Первая загрузка: директории нет, а сервер не сообщил о подготовке (202) — короткая гонка до
+    // записи _prepare.json или сбой сети. Пока идёт подготовка, счётчик сбрасывается каждым 202
+    PAGES_MAX_RETRIES: 15,              // Повторов подряд без 202, дальше — ошибка
+    PAGES_RETRY_DELAY_MS: 2000,         // Пауза между повторами; у 202 — retry_after сервера (мс)
 };
 
 class PngViewer {
@@ -84,7 +92,7 @@ class PngViewer {
         this.pollController = null;     // AbortController висящего /pages — прыжок обрывает старый want
         this.lastPagesAt = 0;           // Время последнего запроса /pages (мс)
         this.lastPagesWant = null;      // want последнего запроса /pages — сервер его уже знает
-        this.pagesGone = false;         // /pages ответил 404: директории больше нет, PNG не запрашиваем
+        this.pagesGone = false;         // /pages ответил 404/202: директории больше нет, PNG не запрашиваем
 
         // ИНТЕГРАЦИЯ: Привязываем DOM элементы (может быть из container)
         this._bindDomElements();
@@ -165,18 +173,34 @@ class PngViewer {
     }
 
     async loadPages(dirPath, retryCount = 0) {
-        const MAX_RETRIES = 15;
-        const RETRY_DELAY_MS = 2000;
         try {
             const want = (this.options.initialPage || 0) + 1;
             this.lastPagesAt = Date.now();
             this.lastPagesWant = want;
-            const response = await fetch(this._pagesUrl(dirPath, want));
+            let response = null;
+            try {
+                response = await fetch(this._pagesUrl(dirPath, want));
+            } catch (error) {
+                // Сбой сети посреди долгого ожидания — не конец: повтор, как у ответа без страниц
+                console.warn('PngViewer.loadPages: fetch failed', error);
+            }
 
-            if (!response.ok) {
-                if (retryCount < MAX_RETRIES) {
-                    this.showEmptyState('Подготовка страниц...');
-                    setTimeout(() => this.loadPages(dirPath, retryCount + 1), RETRY_DELAY_MS);
+            // Архив ещё распаковывается — директории PNG нет, сервер отдаёт этап и прогресс.
+            // Пока идёт подготовка, ждём сколько угодно: счётчик повторов сбрасывается
+            if (response?.status === 202) {
+                const prepare = await response.json();
+                this._showPreparing(
+                    MESSAGES.CACHE_STAGES[prepare.stage] || MESSAGES.CACHE_STAGE_UNKNOWN,
+                    prepare.detail || '',
+                );
+                setTimeout(() => this.loadPages(dirPath, 0), prepare.retry_after || CONFIG.PAGES_RETRY_DELAY_MS);
+                return;
+            }
+
+            if (!response?.ok) {
+                if (retryCount < CONFIG.PAGES_MAX_RETRIES) {
+                    this._showPreparing(MESSAGES.PAGES_PREPARING, '');
+                    setTimeout(() => this.loadPages(dirPath, retryCount + 1), CONFIG.PAGES_RETRY_DELAY_MS);
                     return;
                 }
                 throw new Error('Failed to load pages');
@@ -191,9 +215,9 @@ class PngViewer {
             }
 
             // Директория пуста и нет known total — конвертация ещё не дошла до первой страницы
-            if (diskPages.length === 0 && !this.options.pagesTotal && retryCount < MAX_RETRIES) {
-                this.showEmptyState('Подготовка страниц...');
-                setTimeout(() => this.loadPages(dirPath, retryCount + 1), RETRY_DELAY_MS);
+            if (diskPages.length === 0 && !this.options.pagesTotal && retryCount < CONFIG.PAGES_MAX_RETRIES) {
+                this._showPreparing(MESSAGES.PAGES_PREPARING, '');
+                setTimeout(() => this.loadPages(dirPath, retryCount + 1), CONFIG.PAGES_RETRY_DELAY_MS);
                 return;
             }
 
@@ -219,6 +243,11 @@ class PngViewer {
             if (this.pages.length > 0) {
                 this.renderAllPages();
                 this.updateUI();
+                // Начальная страница (из ссылки #p=N) — здесь, а не в loadDirectory: после повторов
+                // загрузка заканчивается в таймере, и loadDirectory уже не видит страниц
+                if (this.options.initialPage >= 0 && this.options.initialPage < this.pages.length) {
+                    setTimeout(() => this.goToPage(this.options.initialPage, true), 100);  // instant scroll
+                }
                 // Пока сервер рисует для want — опрашиваем /pages: подтягиваем новые PNG
                 // без перезагрузки вьюера и держим heartbeat, без которого сервер ставит
                 // конвертацию на паузу. Рисовать нечего — следующий запрос при смене страницы
@@ -312,8 +341,9 @@ class PngViewer {
             const response = await fetch(this._pagesUrl(this.directory, this.lastPagesWant), {
                 signal: this.pollController.signal,
             });
-            if (response.status === 404) {
-                // Директории нет: кеш вытеснен или пересобирается — опрос бесполезен
+            if (response.status === 404 || response.status === 202) {
+                // Директории нет: кеш вытеснен или пересобирается (202 — архив готовится заново,
+                // исходник сменился) — показанный список страниц устарел, опрос бесполезен
                 nextDelay = null;
                 this._markPagesGone();
                 return;
@@ -398,18 +428,8 @@ class PngViewer {
         }
         
         try {
+            // Переход на начальную страницу — в loadPages, когда страницы получены
             await this.loadPages(dirPath);
-            
-            // ИНТЕГРАЦИЯ: Перейти на начальную страницу если указана (>= 0)
-            if (typeof this.options.initialPage === 'number' && 
-                this.options.initialPage >= 0 && 
-                this.options.initialPage < this.pages.length) {
-                // ИСПРАВЛЕНИЕ: Используем instant scroll для начальной навигации
-                setTimeout(() => {
-                    this.goToPage(this.options.initialPage, true);  // instant scroll
-                }, 100);
-            }
-            
             return true;
         } catch (error) {
             console.error('PngViewer.loadDirectory:', error);
@@ -939,24 +959,57 @@ class PngViewer {
         this.pageInput.value = this.pages.length > 0 ? this.currentPage + 1 : 0;
     }
 
+    /**
+     * Пустое состояние с сообщением: страниц нет, путь не указан, ошибка загрузки.
+     * @param {string} message
+     */
     showEmptyState(message) {
+        this._resetPages();
+        const box = document.createElement('div');
+        box.className = 'empty-state';
+        const text = document.createElement('p');
+        text.textContent = message;
+        box.append(text);
+        this.viewportInner.replaceChildren(box);
+        this.updateUI();
+    }
+
+    /**
+     * Ожидание подготовки: спиннер, этап и прогресс с сервера (detail приходит из _prepare.json,
+     * поэтому только textContent). Блок ожидания уже есть в разметке png-viewer.html — повторный
+     * вызов меняет текст на месте, и спиннер не перезапускается на каждом опросе.
+     * @param {string} message - этап подготовки
+     * @param {string} detail - прогресс, может быть пустым
+     */
+    _showPreparing(message, detail) {
+        let box = this.viewportInner.querySelector('.empty-state.is-preparing');
+        if (!box) {
+            this._resetPages();
+            box = document.createElement('div');
+            box.className = 'empty-state is-preparing';
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            const text = document.createElement('p');
+            text.className = 'preparing-message';
+            const detailLine = document.createElement('p');
+            detailLine.className = 'preparing-detail';
+            box.append(spinner, text, detailLine);
+            this.viewportInner.replaceChildren(box);
+            this.updateUI();
+        }
+        box.querySelector('.preparing-message').textContent = message;
+        box.querySelector('.preparing-detail').textContent = detail;
+    }
+
+    /** Сброс страниц и observer перед пустым состоянием или ожиданием. */
+    _resetPages() {
         this.pages = [];
         this.currentPage = 0;
         this.loadedPages.clear();
-        
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
         }
-
-        this.viewportInner.innerHTML = `
-            <div class="empty-state">
-                <h2>PNG Viewer MVP</h2>
-                <p>${message}</p>
-            </div>
-        `;
-        
-        this.updateUI();
     }
 
 }

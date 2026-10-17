@@ -111,7 +111,8 @@ function replacePlaceholderWithViewer(container, pngDir, page, pagesTotal) {
  */
 async function resolvePdfViewer(container, pdfName) {
     // Без data-pages-total кэш не готов: конвертация стартует только после жеста
-    // (cacheWarmService), а лимит ретраев /pages у png-viewer должен отсчитываться от её старта.
+    // (cacheWarmService), а ожидание /pages у png-viewer должно начинаться вместе с ней: до записи
+    // _prepare.json /pages отвечает 404, и на это у вьюера ограниченный запас повторов.
     // Кто ещё не дал жеста, видит кнопку вместо спиннера: нажатие на неё — тоже жест.
     if (!container.dataset.pagesTotal) {
         if (!hasUserGesture()) {

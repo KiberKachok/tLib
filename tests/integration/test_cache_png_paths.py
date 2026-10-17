@@ -11,13 +11,14 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from config import CACHE_RETRY_AFTER_MS, CACHE_STALE_LOCK_TIMEOUT_MINUTES
 import routers.cache_router as cache_router_module
 import routers.png_viewer_router as png_viewer_router_module
 import services.cache.cache_service as cache_service_module
@@ -587,6 +588,69 @@ class TestConvertWhileWatching:
         meta = json.loads((tmp_dirs["cache"] / "00001-TST" / "_meta.json").read_text(encoding="utf-8"))
         assert (meta["files"][0]["status"], meta["files"][0]["pages_done"]) == ("partial", 1)
         assert not (tmp_dirs["cache"] / "00001-TST" / "_prepare.lockdir").exists()
+
+
+# ---------------------------------------------------------------------------
+# Холодное открытие: архив ещё распаковывается — /pages и /contents отвечают 202 с этапом
+# ---------------------------------------------------------------------------
+
+
+def _write_prepare(cache_dir: Path, archive_name: str, stage: str, detail: str, age_s: float = 0) -> None:
+    """Пишет _prepare.json идущей подготовки; age_s — давность последнего heartbeat."""
+    archive_dir = cache_dir / archive_name
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    updated_at = datetime.now(timezone.utc) - timedelta(seconds=age_s)
+    prepare = {"status": "preparing", "stage": stage, "sub": "", "detail": detail,
+               "updated_at": updated_at.isoformat()}
+    (archive_dir / "_prepare.json").write_text(json.dumps(prepare), encoding="utf-8")
+
+
+class TestPreparingProgress:
+    """Директории PNG создаёт pre-scan после распаковки всего архива: до этого вьюер ждёт по 202
+    с этапом и прогрессом, а не упирается в 404 и лимит повторов."""
+
+    def test_pages_returns_202_while_archive_preparing(self, app_client, tmp_dirs):
+        _write_prepare(tmp_dirs["cache"], "00001-TST", "extracting", "40 из 120 файлов")
+
+        resp = app_client.get("/api/png/00001-TST/dir1/report-png/pages?want=1")
+
+        assert resp.status_code == 202, resp.text
+        assert resp.json() == {"status": "preparing", "stage": "extracting",
+                               "detail": "40 из 120 файлов", "retry_after": CACHE_RETRY_AFTER_MS}
+        # Ни heartbeat, ни директорий: смотреть ещё нечего
+        assert [p.name for p in (tmp_dirs["cache"] / "00001-TST").iterdir()] == ["_prepare.json"]
+
+    def test_pages_returns_404_when_prepare_stale(self, app_client, tmp_dirs):
+        """Подготовка оборвалась (рестарт): _prepare.json без heartbeat дольше таймаута — ждать нечего."""
+        _write_prepare(tmp_dirs["cache"], "00001-TST", "extracting", "",
+                       age_s=(CACHE_STALE_LOCK_TIMEOUT_MINUTES + 1) * 60)
+
+        resp = app_client.get("/api/png/00001-TST/dir1/report-png/pages?want=1")
+
+        assert resp.status_code == 404
+
+    def test_pages_returns_404_for_missing_dir_while_resume_runs(self, app_client, tmp_dirs):
+        """Докрутка PDF пишет _prepare.json при валидной meta и новых директорий не создаёт."""
+        _make_partial_cache(tmp_dirs["data"], tmp_dirs["cache"], "00001-TST")
+        _write_prepare(tmp_dirs["cache"], "00001-TST", "converting", "Готово 1 из 3 стр.")
+
+        resp = app_client.get("/api/png/00001-TST/dir1/other-png/pages?want=1")
+
+        assert resp.status_code == 404
+
+    def test_contents_returns_202_while_preparing(self, app_client, tmp_dirs):
+        _write_prepare(tmp_dirs["cache"], "00001-TST", "extracting", "3 из 10 файлов")
+
+        resp = app_client.get("/api/cache/00001-TST/contents")
+
+        assert resp.status_code == 202, resp.text
+        assert resp.json() == {"status": "preparing", "stage": "extracting",
+                               "detail": "3 из 10 файлов", "retry_after": CACHE_RETRY_AFTER_MS}
+
+    def test_contents_returns_404_when_not_preparing(self, app_client, tmp_dirs):
+        resp = app_client.get("/api/cache/00001-TST/contents")
+
+        assert resp.status_code == 404
 
 
 # ---------------------------------------------------------------------------

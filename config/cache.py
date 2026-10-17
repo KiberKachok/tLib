@@ -1,6 +1,6 @@
 # Конфигурация кеша TlibWebApp
-# Описание: Имена файлов и директорий кеша, статусы, стадии подготовки,
-#           таймауты и параметры LRU-очистки.
+# Описание: Имена файлов и директорий кеша, статусы, стадии подготовки и шаблоны
+#           прогресса для читателя, таймауты и параметры LRU-очистки.
 
 # ==================== ФАЙЛЫ И ДИРЕКТОРИИ КЕША ====================
 
@@ -112,6 +112,16 @@ CACHE_FILE_STATUS_PARTIAL: str = "partial"
 CACHE_STAGE_STARTING: str = "starting"
 CACHE_STAGE_EXTRACTING: str = "extracting"
 CACHE_STAGE_CONVERTING: str = "converting"
+
+# Прогресс подготовки (поле detail в _prepare.json). Читатель видит его под этапом — во вьюере
+# PDF, в превью картинок и треков, у ссылок «Прочее», — поэтому по-русски. Подстановки
+# именованные: шаблон форматируется в колбэках распаковки и рендера, и опечатка в имени
+# оборвала бы подготовку — набор имён у каждого шаблона закреплён тестом
+CACHE_DETAIL_EXTRACTING: str = "{done} из {total} файлов"
+CACHE_DETAIL_PDF: str = "PDF {idx} из {total}"
+CACHE_DETAIL_PDF_PAGES: str = "PDF {idx} из {total}: готово {done} из {pages} стр."
+CACHE_DETAIL_PAGES: str = "Готово {done} из {total} стр."
+CACHE_DETAIL_IMAGES: str = "Изображения: {idx} из {total}"
 
 # Допустимые kind у POST /api/cache/{name}/resolve.
 # PDF-вьюер ходит в /api/png/.../pages напрямую, поэтому "pdf" здесь нет:

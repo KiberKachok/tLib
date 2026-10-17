@@ -2,6 +2,8 @@
 # Описание: API endpoints для PNG viewer. Предоставляет листинг PNG директорий в data.cache
 #           и списки PNG файлов для просмотра. Используется embedded-вьюером /png-viewer.
 #           Логика resolve переехала в единый cache_router POST /resolve.
+#           Пока архив распаковывается и директории PNG ещё нет, /pages отвечает 202 с этапом
+#           подготовки, а не 404: холодное открытие большого архива длится дольше лимита повторов вьюера.
 
 import asyncio
 import json
@@ -24,7 +26,7 @@ from config import (
 # Импорт сервисов кеша: heartbeat просмотра и докрутка частичной конвертации
 from services.cache.cache_watch import touch_watch, read_pages_total, is_partial, count_pngs, needs_resume
 from services.cache.cache_prepare_service import (
-    is_preparing, read_prepare_status, resume_pdf_conversion, resumable_pdf_entry,
+    is_preparing, read_prepare_status, resume_pdf_conversion, resumable_pdf_entry, prepare_progress,
 )
 from services.cache.cache_service import generate_png_filename
 
@@ -199,10 +201,14 @@ async def get_pages(
         dir_path: путь к директории (например: "12345-ABC/dir1/report-png")
         want: страница (1-based), которую показывает вьюер
 
+    Директории нет, а архив готовится (prepare_progress) — 202 с этапом: вьюер ждёт и показывает
+    прогресс. Директории нет и подготовки нет — 404.
+
     Returns:
-        {"pages": [{"name": "...", "url": "...", "size": N}, ...], "total": N,
-         "directory": "...", "rendering": bool,
-         "pages_total": N}   # pages_total — если известен из pre-scan
+        200: {"pages": [{"name": "...", "url": "...", "size": N}, ...], "total": N,
+              "directory": "...", "rendering": bool,
+              "pages_total": N}   # pages_total — если известен из pre-scan
+        202: {"status": "preparing", "stage": "...", "detail": "...", "retry_after": 1000}
     """
     try:
         client_ip = request.client.host if request.client else "unknown"
@@ -236,16 +242,23 @@ async def get_pages(
         except PathValidationError:
             return JSONResponse({'error': 'Invalid path'}, status_code=400)
 
-        # Проверяем существование
+        # Имя архива и путь PNG-директории — из проверенного full_path, а не из сырых сегментов URL.
+        # resolve() не требует существования пути: имя архива известно и до появления директории
+        cache_root = Path(CACHE_DIRECTORY).resolve()
+        rel_parts = full_path.relative_to(cache_root).parts
+
         if not full_path.exists():
+            # Директории PNG создаёт pre-scan после распаковки всего архива. Пока архив распаковывается,
+            # вьюер ждёт: 202 с этапом и прогрессом вместо 404. Heartbeat не пишется — смотреть нечего,
+            # а директории для мусорных URL не создаются
+            progress = prepare_progress(rel_parts[0]) if len(rel_parts) >= 2 else None
+            if progress is not None:
+                return JSONResponse(progress, status_code=202)
             return JSONResponse({'error': 'Directory not found'}, status_code=404)
 
         if not full_path.is_dir():
             return JSONResponse({'error': 'Not a directory'}, status_code=400)
 
-        # Имя архива и путь PNG-директории — из проверенного full_path, а не из сырых сегментов URL
-        cache_root = Path(CACHE_DIRECTORY).resolve()
-        rel_parts = full_path.relative_to(cache_root).parts
         archive_name = rel_parts[0]
         png_dir_rel = "/".join(rel_parts[1:])
         pdf_stem = full_path.name.removesuffix('-png')

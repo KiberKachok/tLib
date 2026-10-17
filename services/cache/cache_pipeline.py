@@ -28,6 +28,7 @@ from config import (
     CACHE_STATUS_ERROR,
     CACHE_FILE_STATUS_PARTIAL,
     CACHE_STAGE_EXTRACTING, CACHE_STAGE_CONVERTING,
+    CACHE_DETAIL_EXTRACTING, CACHE_DETAIL_PDF, CACHE_DETAIL_PDF_PAGES, CACHE_DETAIL_IMAGES,
 )
 
 # Импорт логгеров
@@ -152,7 +153,7 @@ async def extract_files(archive_name: str, zip_path: Path, cache_dir: Path,
                 files_info.append(file_info)
 
                 write_status_callback(archive_name, stage=CACHE_STAGE_EXTRACTING,
-                                      detail=f"Extracted {count}/{total}")
+                                      detail=CACHE_DETAIL_EXTRACTING.format(done=count, total=total))
 
         return files_info
 
@@ -292,20 +293,19 @@ async def convert_pdfs(archive_name: str, zip_path: Path, cache_dir: Path,
                 archive_name,
                 stage=CACHE_STAGE_CONVERTING,
                 sub="pdf",
-                detail=f"PDF {idx}/{total_pdfs}",
+                detail=CACHE_DETAIL_PDF.format(idx=idx, total=total_pdfs),
                 converting_path=rel_path_str
             )
             
             png_dir = get_png_dir_path(archive_name, rel_path_str)
             
-            # Callback для постраничного прогресса
+            # Callback для постраничного прогресса: total здесь — страницы PDF, _total — число PDF
             def _page_progress(done, total, _idx=idx, _total=total_pdfs, _rel=rel_path_str):
-                pct = int(done / total * 100) if total > 0 else 0
                 write_status_callback(
                     archive_name,
                     stage=CACHE_STAGE_CONVERTING,
                     sub="pdf",
-                    detail=f"PDF {_idx}/{_total}: {done}/{total} ({pct}%)",
+                    detail=CACHE_DETAIL_PDF_PAGES.format(idx=_idx, total=_total, done=done, pages=total),
                     pages_total=total,
                     converting_path=_rel
                 )
@@ -425,7 +425,7 @@ async def convert_images(archive_name: str, zip_path: Path, cache_dir: Path,
             archive_name,
             stage=CACHE_STAGE_CONVERTING,
             sub="images",
-            detail=f"Images {idx}/{total_images}"
+            detail=CACHE_DETAIL_IMAGES.format(idx=idx, total=total_images)
         )
 
         # Читатель PDF не ждёт все фото: окно дорисовывается между картинками.
