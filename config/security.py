@@ -124,6 +124,9 @@ STRICT_FILE_CSP: str = (
     "font-src 'self' data:"       # Разрешить шрифты
 )
 
+# Origin фрейма Kartoid (вкладка «Карта»): frame-src и CORS в middlewares/kartoid_cors.py
+KARTOID_ORIGIN: str = "https://kartoid.com"
+
 # Content Security Policy (CSP) - политика безопасности содержимого
 # Определяет, какие ресурсы могут быть загружены и выполнены на странице
 CSP_POLICY: str = (
@@ -134,7 +137,7 @@ CSP_POLICY: str = (
     "font-src 'self' data:; "                     # Шрифты: свой домен + data: URI
     "connect-src 'self' blob:; "                  # AJAX/WebSocket: свой домен + blob: URI
     "worker-src blob: 'self'; "                   # Web Workers: blob: + свой домен
-    "frame-src 'self' blob: https://nakarte.me; " # Разрешить iframe с того же домена, blob: URL и nakarte.me
+    f"frame-src 'self' blob: https://nakarte.me {KARTOID_ORIGIN}; " # Разрешить iframe с того же домена, blob: URL, nakarte.me и kartoid.com
     "object-src 'self'; "                         # Разрешить embed/object с того же домена (для PDF)
     "child-src blob: 'self'; "                    # Разрешить child frames
     "frame-ancestors 'self'; "                    # Разрешить встраивание на страницах того же домена

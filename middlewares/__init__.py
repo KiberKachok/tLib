@@ -7,3 +7,4 @@
 # - request_id.py: Добавление уникального request_id к каждому запросу
 # - data_download.py: Добавление Content-Disposition для файлов
 # - traffic_stats.py: Сбор статистики посещений (hits, IP, популярные отчёты)
+# - kartoid_cors.py: CORS для фрейма Kartoid на файлах архивов

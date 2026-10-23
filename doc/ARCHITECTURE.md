@@ -77,7 +77,8 @@ TlibWebApp/
 │   ├── http_methods.py     # Фильтрация методов
 │   ├── request_id.py       # Уникальный ID запроса
 │   ├── data_download.py    # Content-Disposition для файлов /data/
-│   └── traffic_stats.py    # Статистика посещений → stats.db (data.secret/)
+│   ├── traffic_stats.py    # Статистика посещений → stats.db (data.secret/)
+│   └── kartoid_cors.py     # CORS для фрейма Kartoid на /api/archive/*/file/*
 │
 ├── routers/                # API Endpoints (тонкий HTTP-слой: auth + вызов сервиса)
 │   ├── search_router.py    # POST /api/search
