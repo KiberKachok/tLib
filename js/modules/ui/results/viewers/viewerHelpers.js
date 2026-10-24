@@ -353,13 +353,15 @@ export function buildViewersBlockHtml(files, { wrapperClass, dataAttrName, archi
 
 /**
  * Генерирует HTML ссылки файла категории «Прочее».
+ * Без target="_blank": клик и средняя кнопка перехватываются (single.js) и ждут распаковку архива,
+ * а новая вкладка шла бы прямо в /cache/ и на неготовом кеше получала 404.
  * @param {object} prep - Результат prepareFileLink
  * @returns {string}
  */
 export function buildOtherLinkHtml(prep) {
     const { escapedUrl, escapedDisplayName, fileSize } = prep;
     const sizeStr = FileUtils.formatSizeShort(fileSize);
-    return `<a class="other-file-link" href="${escapedUrl}" target="_blank" rel="noopener noreferrer" data-size="${Number(fileSize) || 0}" title="${sizeStr}">${escapedDisplayName}${FileUtils.formatSizeInMb(fileSize)}</a>`;
+    return `<a class="other-file-link" href="${escapedUrl}" data-size="${Number(fileSize) || 0}" title="${sizeStr}">${escapedDisplayName}${FileUtils.formatSizeInMb(fileSize)}</a>`;
 }
 
 // =============================================================================
@@ -464,9 +466,12 @@ export function activateViewerIframe(container, iframe, src, placeholderSelector
  * @param {Object} [options]
  * @param {number} [options.maxAttempts]
  * @returns {Promise<Object>} - результат resolve (status: 'ready', url)
- * @throws {Error} - при timeout, error, not_prepared, not_found
+ * @throws {Error} - при timeout, error, not_prepared, not_found; error.status — 'timeout', 'error',
+ *                   'not_prepared' или 'not_found': по нему вызывающий отличает окончательный отказ
+ *                   сервера от того, что не дождались
  */
 export async function resolveAndWait(container, archiveName, kind, zipPath, { maxAttempts = CONSTANTS.LIMITS.RESOLVE_MAX_ATTEMPTS } = {}) {
+    const fail = (message, status) => Object.assign(new Error(message), { status });
     let attempts = 0;
     let delay = CONSTANTS.TIMING.RESOLVE_INITIAL_DELAY;
 
@@ -483,9 +488,9 @@ export async function resolveAndWait(container, archiveName, kind, zipPath, { ma
         }
 
         if (res.status === 'ready') return res;
-        if (res.status === 'error') throw new Error(res.message || 'Ошибка подготовки кеша');
+        if (res.status === 'error') throw fail(res.message || 'Ошибка подготовки кеша', 'error');
         if (res.status === 'not_prepared' || res.status === 'not_found') {
-            throw new Error(res.status === 'not_prepared' ? 'Кеш не подготовлен' : 'Файл не найден');
+            throw fail(res.status === 'not_prepared' ? 'Кеш не подготовлен' : 'Файл не найден', res.status);
         }
 
         // preparing — показываем прогресс
@@ -497,6 +502,6 @@ export async function resolveAndWait(container, archiveName, kind, zipPath, { ma
         attempts++;
     }
 
-    throw new Error(CONSTANTS.MESSAGES.CACHE_TIMEOUT);
+    throw fail(CONSTANTS.MESSAGES.CACHE_TIMEOUT, 'timeout');
 }
 

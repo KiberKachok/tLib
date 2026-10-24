@@ -495,14 +495,21 @@ export class SingleResultsRenderer {
 
         SingleResultsRenderer._tabController = tabs;
 
-        document.querySelector('.tabs-container')?.addEventListener('click', (event) => {
+        // Файл «Прочее»: клик и средняя кнопка (auxclick, button 1) ждут распаковку и скачивают
+        // в этой вкладке. Открытие в новой вкладке шло бы прямо в /cache/ и на неготовом кеше — в 404.
+        // «Открыть в новой вкладке» из контекстного меню браузера не перехватить
+        const onOtherFileActivate = (event) => {
+            if (event.type === 'auxclick' && event.button !== 1) return;
             const link = event.target.closest('a.other-file-link');
             if (!link) return;
             const archiveName = link.closest('.tabs-container')?.dataset?.archiveName;
             if (!archiveName) return;
             event.preventDefault();
             downloadOtherFile(link, archiveName);
-        });
+        };
+        const tabsContainer = document.querySelector('.tabs-container');
+        tabsContainer?.addEventListener('click', onOtherFileActivate);
+        tabsContainer?.addEventListener('auxclick', onOtherFileActivate);
 
         // Делегируем setupHandlers всем стратегиям
         Object.values(VIEWER_STRATEGIES).forEach(s => s.setupHandlers());

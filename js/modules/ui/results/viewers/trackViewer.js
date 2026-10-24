@@ -43,7 +43,9 @@ function buildNakarteViewerHtml({ trackUrl, trackName, archiveName, isPlainMode,
     }
 
     const escapedUrl = validation.url.replace(/"/g, '&quot;');
-    const shouldLazyLoad = !isPlainMode;
+    // «Все треки» грузится через resolve и в plain-режиме: geo.zip может не собраться, и без
+    // проверки iframe получил бы 404 (loadTrackViewer тогда переключает на первый трек)
+    const shouldLazyLoad = !isPlainMode || trackName === 'all-tracks';
     const iframeSrc = shouldLazyLoad ? 'about:blank' : escapedUrl;
     const pendingAttr = shouldLazyLoad ? ` data-pending-url="${escapedUrl}"` : '';
 
@@ -139,8 +141,30 @@ async function loadTrackViewer(container) {
         activateTrackIcons(container);
     } catch (error) {
         console.error(`Error loading track ${trackName}:`, error);
+        // Сервер окончательно сказал, что общего архива треков нет (не собрался, вытеснен):
+        // «Все треки» убирается, открывается первый трек. Не дождались или сбой сети — ошибка
+        // с кнопкой повтора, как у отдельного трека
+        if (kind === 'all_tracks' && (error.status === 'not_found' || error.status === 'error')) {
+            dropAllTracks(container);
+            return;
+        }
         showViewerError(container, error.message || 'Не удалось загрузить трек');
     }
+}
+
+/**
+ * Убирает «Все треки» (ссылку с иконками и превью) и показывает первый трек:
+ * ссылка строится по числу треков, а geo.zip может не собраться или быть вытеснен.
+ * Клик по ссылке трека делает остальное — показ превью, загрузку, активную ссылку и hash.
+ * @param {HTMLElement} container - контейнер превью all-tracks
+ */
+function dropAllTracks(container) {
+    const scope = container.closest('.tab-content') || document;
+    const wasVisible = !container.classList.contains('track-offscreen');
+    scope.querySelector('.all-tracks-group')?.remove();
+    container.remove();
+    // Читатель уже перешёл на отдельный трек — его выбор не трогаем
+    if (wasVisible) scope.querySelector('.tab-link[data-track-url][data-track-name]')?.click();
 }
 
 // =============================================================================
@@ -170,10 +194,12 @@ export function buildFileListHtml(files, { shifr, dopShifr, archiveName, isPlain
 
         const pending = pendingTrackAttr('all-tracks', isPlainMode);
 
+        // Обёртка — чтобы dropAllTracks убрал ссылку, иконки и разделитель одним узлом
+        html += '<span class="all-tracks-group">';
         html += `<a href="#" class="tab-link active" data-track-url="${escapedAllTracksUrl}" title="${allTracksSizeStr}">Все треки</a> `;
         html += `<a href="${escapedAllTracksUrl}" class="track-download-icon" download title="Скачать все треки"${pending}>${DOWNLOAD_SVG}</a> `;
         html += `<a href="${escapedNakarteUrl}" class="external-link-icon" target="${escapeAttribute(windowName)}" title="Открыть все треки на nakarte.me"${pending}>${EXTERNAL_SVG}</a>`;
-        html += '; ';
+        html += '; </span>';
     }
 
     const fileLinks = files.map((file, fileIndex) => {
