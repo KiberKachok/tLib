@@ -230,7 +230,13 @@ WantedBy=multi-user.target
 >
 > Сами зависшие запросы обрывает uvicorn: стартовые скрипты запускают его с `--timeout-graceful-shutdown 10`. Без этого флага uvicorn на остановке ждёт все открытые соединения и фоновые задачи запросов без ограничения — подготовку большого архива (на проде до 43 с) или клиента, который минутами не досылает форму поиска, — и остановку обрывает только SIGKILL systemd. С флагом через 10 с незавершённые запросы отменяются, и сервер штатно проходит shutdown-ветку `lifespan` (сброс статистики, остановка воркера рендера). Значение флага должно быть меньше `TimeoutStopSec`, иначе systemd убьёт процесс раньше. Прерванная подготовка архива восстанавливается сама: lock без `_prepare.json` снимается через `CACHE_STALE_LOCK_TIMEOUT_MINUTES` (5 мин), частичный PDF докручивается при следующем просмотре.
 >
-> Если юнит создан до появления `TimeoutStopSec` в этой инструкции, systemd ждёт 90 с по умолчанию. Проверка: `systemctl show tlibapp -p TimeoutStopUSec`; добавить строку — `sudo systemctl edit tlibapp`, затем `sudo systemctl daemon-reload`.
+> Если юнит создан до появления `TimeoutStopSec` в этой инструкции, systemd ждёт 90 с по умолчанию. Проверка: `systemctl show tlibapp -p TimeoutStopUSec`. Добавить одной командой, без редактора и без рестарта сервиса (создаётся файл-дополнение к юниту, значение подействует при следующей остановке; последняя команда должна напечатать `TimeoutStopUSec=15s`):
+>
+> ```bash
+> sudo mkdir -p /etc/systemd/system/tlibapp.service.d && printf '[Service]
+TimeoutStopSec=15
+' | sudo tee /etc/systemd/system/tlibapp.service.d/override.conf >/dev/null && sudo systemctl daemon-reload && systemctl show tlibapp -p TimeoutStopUSec
+> ```
 
 **Для Tailscale Funnel:**
 
