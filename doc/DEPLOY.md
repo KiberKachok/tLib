@@ -233,9 +233,7 @@ WantedBy=multi-user.target
 > Если юнит создан до появления `TimeoutStopSec` в этой инструкции, systemd ждёт 90 с по умолчанию. Проверка: `systemctl show tlibapp -p TimeoutStopUSec`. Добавить одной командой, без редактора и без рестарта сервиса (создаётся файл-дополнение к юниту, значение подействует при следующей остановке; последняя команда должна напечатать `TimeoutStopUSec=15s`):
 >
 > ```bash
-> sudo mkdir -p /etc/systemd/system/tlibapp.service.d && printf '[Service]
-TimeoutStopSec=15
-' | sudo tee /etc/systemd/system/tlibapp.service.d/override.conf >/dev/null && sudo systemctl daemon-reload && systemctl show tlibapp -p TimeoutStopUSec
+> sudo mkdir -p /etc/systemd/system/tlibapp.service.d && printf '[Service]\nTimeoutStopSec=15\n' | sudo tee /etc/systemd/system/tlibapp.service.d/override.conf >/dev/null && sudo systemctl daemon-reload && systemctl show tlibapp -p TimeoutStopUSec
 > ```
 
 **Для Tailscale Funnel:**
