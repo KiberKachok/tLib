@@ -170,6 +170,7 @@ python -m uvicorn "$APP_MODULE" \
     --host "$HOST" \
     --port "$PORT" \
     --log-level info \
+    --timeout-graceful-shutdown 10 \
     --access-log \
     --proxy-headers \
     --forwarded-allow-ips="127.0.0.1" &

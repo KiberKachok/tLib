@@ -138,6 +138,7 @@ python -m uvicorn "$APP_MODULE" \
     --host "$HOST" \
     --port "$PORT" \
     --log-level info \
+    --timeout-graceful-shutdown 10 \
     --access-log &
 
 # Сохранение PID процесса для graceful shutdown

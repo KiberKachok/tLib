@@ -23,8 +23,11 @@ RATE_LIMIT_STATIC_WARNING_THRESHOLD: int = 1000
 RATE_LIMIT_STATIC_HARD_THRESHOLD: int = 5000
 
 # Максимум одновременных запросов к статике с одного IP
-# Защита от параллельных массовых скачиваний
-MAX_CONCURRENT_STATIC_CONNECTIONS: int = 10
+# Защита от параллельных массовых скачиваний. Встроенный просмотрщик PDF браузера тянет файл
+# параллельными Range-запросами по HTTP/2: при 10 куски PDF на 10 МБ получали 429, браузер их
+# не повторял, и читатель видел недогруженный документ. Лимит считается на IP, поэтому его делят
+# читатели за одним NAT
+MAX_CONCURRENT_STATIC_CONNECTIONS: int = 20
 
 # Retry-After для ответа 429 при concurrent-лимите (секунды)
 RETRY_AFTER_CONCURRENT_SECONDS: int = 10

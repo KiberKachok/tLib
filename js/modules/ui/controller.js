@@ -8,6 +8,7 @@ import { ButtonManager } from './form.js';
 import { FormManager } from './form.js';
 import { ResultsRenderer } from './results/index.js';
 import { getHashParams } from '../../utils/urlUtils.js';
+import { getServerConfig } from '../../services/serverConfigService.js';
 
 // ID select элементов формы поиска
 const SELECT_IDS = {
@@ -78,8 +79,14 @@ export class UIController {
 
         // Подписываемся на загрузку справочников (эмитирует referenceListsService)
         appState.on('reference:lists-loaded', ({ lists }) => {
+            // Значение «нет» — фильтр «только отчёты без доп.шифра», а не «любой»: так его и подписываем.
+            // В запрос уходит прежнее значение — его ждут сервер и компактные ссылки (redirect.js)
+            const noDopShifr = getServerConfig().specialValues.noDopShifr;
             UIController.populateSelect(SELECT_IDS.DOP_SHIFR, SELECT_LABELS.DOP_SHIFR, lists.dopshifr, {
-                displayText: (value, label) => value === '' ? label : value
+                displayText: (value, label) => {
+                    if (value === '') return label;
+                    return value === noDopShifr ? CONSTANTS.MESSAGES.DOP_SHIFR_NONE_LABEL : value;
+                }
             });
             UIController.populateSelect(SELECT_IDS.RAION_OBSHIY, SELECT_LABELS.RAION_OBSHIY, lists.raionObshiy);
             UIController.populateSelect(SELECT_IDS.TIP, SELECT_LABELS.TIP, lists.tip);
