@@ -116,12 +116,17 @@ function activateTrackIcons(container) {
  * @param {function} [adjustFn]
  */
 async function loadTrackViewer(container) {
-    if (!container) return;
+    if (!container?.isConnected) return;
 
     const iframe = container.querySelector('.nakarte-viewer');
     const pendingUrl = iframe?.dataset?.pendingUrl;
 
     if (!iframe || !pendingUrl) return;
+    // Открытие вкладки зовёт загрузку несколько раз подряд (autoLoad при переключении, клик по
+    // ссылке из hash): пока первый resolve не ответил, остальные вызовы не нужны — иначе iframe
+    // перезагружался бы на каждый ответ, а «Все треки» при отказе убирались бы повторно
+    if (iframe.dataset.loading) return;
+    iframe.dataset.loading = '1';
 
     const archiveName = container.dataset.archiveName || '';
     if (!archiveName) {
@@ -149,6 +154,9 @@ async function loadTrackViewer(container) {
             return;
         }
         showViewerError(container, error.message || 'Не удалось загрузить трек');
+    } finally {
+        // После ошибки повторный клик по ссылке трека должен запустить загрузку заново
+        delete iframe.dataset.loading;
     }
 }
 
