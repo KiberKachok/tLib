@@ -297,7 +297,7 @@ class TlibWebApp {
             const count = data.total || (Array.isArray(data.results) ? data.results.length : 0);
             ButtonManager.setSearchState('complete', count);
             // Затем рендерим результаты
-            await ResultsRenderer.render(data.results);
+            await ResultsRenderer.render(data.results, { byShifr: Boolean(data.byShifr) });
         });
 
         // Ленивая пагинация: следующий чанк грузится только при скролле к индикатору

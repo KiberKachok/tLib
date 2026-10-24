@@ -274,6 +274,16 @@ class TestBuildSearchQueryTextFilters(unittest.TestCase):
         self.assertTrue(any("горный" in str(p) for p in params))
         self.assertTrue(any("перевал" in str(p) for p in params))
 
+    def test_marshrut_words_also_search_raion(self):
+        # «Карелия» в поле Маршрут находит отчёты, где она только в районе
+        query, params = _build({"Маршрут": "Карелия озеро"})
+        self.assertIn(
+            "(LOWER(Маршрут) LIKE LOWER(?) OR LOWER(Район) LIKE LOWER(?) OR LOWER(РайонОбщий) LIKE LOWER(?))",
+            query,
+        )
+        self.assertEqual(params.count("%Карелия%"), 3)
+        self.assertEqual(params.count("%озеро%"), 3)
+
     def test_avtor_word_filter(self):
         query, params = _build({"Автор": "Иванов Петр"})
         self.assertIn("LOWER(Автор) LIKE LOWER(?)", query)

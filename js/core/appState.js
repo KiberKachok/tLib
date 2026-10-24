@@ -75,14 +75,17 @@ class AppState {
      * Устанавливает результаты поиска
      * @param {Array} results - Массив результатов поиска
      * @param {number} total - Общее количество результатов (для пагинации), если null - используется results.length
+     * @param {object} [options]
+     * @param {boolean} [options.byShifr] - отчёт найден запасным поиском по шифру (остальные поля формы не учтены)
      */
-    setSearchResults(results, total = null) {
+    setSearchResults(results, total = null, { byShifr = false } = {}) {
         this.state.search.results = results;
         this.state.search.hasResults = results.length > 0;
         this.state.search.total = total !== null ? total : results.length;
         this.emit('search:results-changed', { 
             results, 
-            total: this.state.search.total 
+            total: this.state.search.total,
+            byShifr
         });
     }
 

@@ -802,6 +802,18 @@ th::before {
     font-size: var(--font-size-base);
 }
 
+/* Пометка над карточкой: отчёт найден по шифру, остальные условия формы не учитывались
+   (results/index.js). Рамка и фон как у карточки, текст приглушён */
+.search-notice {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: #f9f9f9;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--border-radius);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-base);
+}
+
 /* Иконки действий в правом нижнем углу единственного результата */
 .single-result-actions {
     position: absolute;

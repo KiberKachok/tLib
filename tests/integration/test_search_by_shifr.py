@@ -64,6 +64,7 @@ def test_route_shifr_ignores_other_fields(search_client: TestClient, caplog):
     assert _codes(body) == ["4825-"]
     assert body["total"] == 1
     assert body["has_more"] is False
+    assert body["by_shifr"] is True
     assert any(getattr(r, "extra_data", {}).get("by_shifr") for r in caplog.records)
 
 
@@ -82,6 +83,7 @@ def test_shifr_with_two_reports_stays_empty(search_client: TestClient):
     body = _search(search_client, {"Шифр": "4825", "Тип": "водный"})
     assert body["data"] == []
     assert body["total"] == 0
+    assert "by_shifr" not in body
 
 
 def test_dopshifr_alone_is_not_shifr(search_client: TestClient):
@@ -100,4 +102,5 @@ def test_matching_search_unchanged(search_client: TestClient, caplog):
     body = _search(search_client, {"Шифр": "4825", "Тип": "пеший"})
 
     assert _codes(body) == ["4825-TLIB"]
+    assert "by_shifr" not in body
     assert not any(getattr(r, "extra_data", {}).get("by_shifr") for r in caplog.records)

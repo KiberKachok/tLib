@@ -23,11 +23,29 @@ export class ResultsRenderer {
     }
 
     /**
+     * Ставит над карточкой строку о том, что отчёт найден по шифру, а остальные условия формы
+     * не учитывались. Вызывается после каждой перезаписи innerHTML карточки.
+     * Отдельный класс, а не .single-result-formatted: e2e-тесты ищут карточку по нему в strict-режиме
+     * @param {HTMLElement} resultsDiv - контейнер результатов
+     * @param {object} row - единственная строка выдачи
+     */
+    static _prependByShifrNotice(resultsDiv, row) {
+        const dopShifr = row["ДопШифр"] || "";
+        const code = dopShifr ? `${row["Шифр"]}-${dopShifr}` : String(row["Шифр"]);
+        const notice = document.createElement('div');
+        notice.className = 'search-notice';
+        notice.textContent = CONSTANTS.MESSAGES.BY_SHIFR_NOTICE.replace('{code}', code);
+        resultsDiv.prepend(notice);
+    }
+
+    /**
      * Отображает результаты поиска в виде таблицы или карточки одного результата
      * @param {Array} rows - Массив результатов поиска
+     * @param {object} [options]
+     * @param {boolean} [options.byShifr] - отчёт найден запасным поиском по шифру: над карточкой пометка
      * @returns {Promise<void>}
      */
-    static async render(rows) {
+    static async render(rows, { byShifr = false } = {}) {
         console.log(`ResultsRenderer.render: получено ${rows.length} результатов для отображения`);
         
         const resultsDiv = DOMUtils.getElement(CONSTANTS.SELECTORS.RESULTS);
@@ -65,6 +83,7 @@ export class ResultsRenderer {
                 phase1 += SingleResultsRenderer.renderSingleResultFormatted(rows[0]);
                 phase1 += '</div></div>';
                 resultsDiv.innerHTML = phase1;
+                if (byShifr) ResultsRenderer._prependByShifrNotice(resultsDiv, rows[0]);
             }
 
             // Фаза 2: HEAD-проверка файла + полный рендер с табами
@@ -76,6 +95,7 @@ export class ResultsRenderer {
             const html = SingleResultsRenderer.renderSingleResultWithTabs(rows[0], archiveData, shifr, dopShifr);
             
             resultsDiv.innerHTML = html;
+            if (byShifr) ResultsRenderer._prependByShifrNotice(resultsDiv, rows[0]);
             
             // Настраиваем обработчики для табов
             SingleResultsRenderer.setupTabHandlers();

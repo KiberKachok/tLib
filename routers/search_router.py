@@ -241,6 +241,11 @@ async def search_database(request: Request):
                     "count": len(results)
                 }
 
+            # Отчёт найден запасным поиском по шифру: фронтенд пишет над карточкой, что остальные
+            # условия формы не учитывались. В обычной выдаче поля нет
+            if log_fields.get("by_shifr"):
+                response_data["by_shifr"] = True
+
             async def json_generator():
                 yield json.dumps(response_data, ensure_ascii=False).encode('utf-8')
 

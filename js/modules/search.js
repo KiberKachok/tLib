@@ -75,7 +75,10 @@ class SearchEngine {
             
             console.log(`Первая страница загружена: ${result.count} из ${result.total || result.count}`);
             
-            appState.setSearchResults(result.data, result.total || result.count);
+            // by_shifr — поиск по форме был пуст, и сервер показал единственный отчёт по шифру
+            appState.setSearchResults(result.data, result.total || result.count, {
+                byShifr: result.by_shifr === true
+            });
             
             if (result.has_more) {
                 this._pagination = {
