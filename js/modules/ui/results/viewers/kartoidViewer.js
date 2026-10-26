@@ -2,7 +2,8 @@
 //   buildFileListHtml, buildViewersHtml, autoLoad, getHashStateOnTabSwitch.
 //   Треки — одной ссылкой на /cache/, как у nakarte.me: все треки отчёта — архивом (getGpsAllTracksUrl), один — сам трек.
 //   Файл скачивает сервер Kartoid; ссылка и поля отчёта — в hash адреса. Кеш готовит resolve при открытии вкладки;
-//   не подготовил — фрейм открывается с fail=<код> (FAIL_CODES), и причину показывает Kartoid.
+//   общего архива нет — первый трек, как у «Треков»; не подготовил и его — фрейм открывается с fail=<код> (FAIL_CODES),
+//   и причину показывает Kartoid.
 
 import { CONSTANTS, TAB_TOKENS } from '../../../../config/constants.js';
 import { escapeAttribute } from '../../../../utils/sanitize.js';
@@ -20,6 +21,16 @@ const FIELDS = [
 
 /** Статус resolve -> код fail фрейма Kartoid (missing, broken, timeout; иначе offline) */
 const FAIL_CODES = { not_found: 'missing', not_prepared: 'missing', error: 'broken', timeout: 'timeout' };
+
+/**
+ * Первый трек, который открывает Kartoid (GPX, KML, KMZ): запасной вариант, если общего архива треков нет.
+ * @param {object[]} files
+ * @returns {object|undefined}
+ */
+function firstKartoidTrack(files) {
+    return files.find(file =>
+        CONSTANTS.FILE_EXTENSIONS.KARTOID_TRACKS.includes(String(file.name ?? '').toLowerCase().split('.').pop().trim()));
+}
 
 /**
  * Файл треков в /cache/ и параметры resolve для него.
@@ -75,8 +86,13 @@ export function buildFileListHtml(files, ctx) {
 export function buildViewersHtml(files, ctx) {
     const url = buildKartoidUrl(CONSTANTS.EXTERNAL_URLS.KARTOID_TRACK, files, ctx);
     const { kind, path } = cacheTarget(files, ctx.archiveName);
+    // Общий архив может не собраться или быть вытеснен — тогда первый трек, как у «Треков» (dropAllTracks)
+    const first = kind === 'all_tracks' ? firstKartoidTrack(files) : null;
+    const fallback = first ? ` data-fallback-path="${escapeAttribute(first.name)}"` +
+        ` data-fallback-url="${escapeAttribute(buildKartoidUrl(CONSTANTS.EXTERNAL_URLS.KARTOID_TRACK, [first], ctx))}"` +
+        ` data-fallback-map="${escapeAttribute(buildKartoidUrl(CONSTANTS.EXTERNAL_URLS.KARTOID_MAP, [first], ctx))}"` : '';
 
-    return `<div class="viewer-container" data-archive-name="${escapeAttribute(ctx.archiveName)}" data-kind="${kind}" data-path="${escapeAttribute(path)}">
+    return `<div class="viewer-container" data-archive-name="${escapeAttribute(ctx.archiveName)}" data-kind="${kind}" data-path="${escapeAttribute(path)}"${fallback}>
         ${spinnerPlaceholderHtml('track-loading-placeholder')}
         <iframe referrerpolicy="no-referrer" class="viewer" title="Просмотр треков на kartoid.com" data-pending-url="${escapeAttribute(url)}" style="display:none"></iframe>
     </div>`;
@@ -91,11 +107,22 @@ export async function autoLoad(tabContent) {
     if (!iframe || iframe.dataset.loading) return;
     iframe.dataset.loading = '1';
     const container = iframe.parentElement;
-    const { archiveName, kind, path } = container.dataset;
+    const { archiveName, kind, path, fallbackPath, fallbackUrl, fallbackMap } = container.dataset;
+    const link = tabContent.querySelector('a[data-pending-track="kartoid"]');
     try {
-        await resolveAndWait(container, archiveName, kind, path);
-        activateViewerIframe(container, iframe, iframe.dataset.pendingUrl);
-        tabContent.querySelector('a[data-pending-track="kartoid"]')?.removeAttribute('data-pending-track');
+        let url = iframe.dataset.pendingUrl;
+        try {
+            await resolveAndWait(container, archiveName, kind, path);
+        } catch (error) {
+            // Сервер окончательно сказал, что общего архива треков нет (не собрался, вытеснен): первый трек
+            if (!fallbackUrl || (error.status !== 'not_found' && error.status !== 'error')) throw error;
+            console.warn(`Kartoid: no all-tracks archive for ${archiveName}, showing the first track:`, error);
+            await resolveAndWait(container, archiveName, 'track', fallbackPath);
+            url = fallbackUrl;
+            if (link) link.href = fallbackMap;
+        }
+        activateViewerIframe(container, iframe, url);
+        link?.removeAttribute('data-pending-track');
     } catch (error) {
         // Причину показывает и учитывает Kartoid: во фрейме — текст и совет, что делать
         console.error(`Error loading Kartoid map for ${archiveName}:`, error);
