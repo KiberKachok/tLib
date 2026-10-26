@@ -51,5 +51,5 @@ const ID_BY_TOKEN = Object.fromEntries(
 export const TABS = deepFreeze({
     TOKEN_BY_ID,
     ID_BY_TOKEN,
-    CATEGORY_NAMES: ['Маршрут', 'PDF', 'Треки', 'Изображения', 'Прочее', 'Карта']
+    CATEGORY_NAMES: ['Маршрут', 'PDF', 'Треки', 'Изображения', 'Прочее', 'Карта 3D']
 });

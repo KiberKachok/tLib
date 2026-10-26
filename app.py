@@ -41,7 +41,6 @@ from middlewares.path_security import PathSecurityMiddleware
 from middlewares.request_id import RequestIDMiddleware
 from middlewares.data_download import DataDownloadMiddleware
 from middlewares.traffic_stats import TrafficStatsMiddleware, StatsCollector
-from middlewares.kartoid_cors import KartoidCORSMiddleware
 
 # Импорт бизнес-логики из services
 from services.database import (
@@ -298,9 +297,6 @@ app.add_middleware(DataDownloadMiddleware)
 # Добавляем Rate Limiting из конфигурации
 app.add_middleware(RateLimitMiddleware, requests_per_minute=RATE_LIMIT_REQUESTS_PER_MINUTE)
 app.add_middleware(TrafficStatsMiddleware)
-
-# ВАЖНО: KartoidCORSMiddleware последним - самый внешний, заголовок CORS получает и ответ 429
-app.add_middleware(KartoidCORSMiddleware)
 
 # Монтируем статические директории из конфигурации
 # Проверяем существование директорий перед монтированием

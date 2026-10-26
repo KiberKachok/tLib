@@ -117,8 +117,6 @@ HTTP заголовки безопасности для всех ответов.
 CSP_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; ..."
 ```
 
-**CORS** (`middlewares/kartoid_cors.py`): `Access-Control-Allow-Origin: https://kartoid.com` (`KARTOID_ORIGIN`) получают только `GET`/`HEAD /api/archive/*/file/*` — фрейм вкладки «Карта» сам скачивает оригиналы треков.
-
 **SEO: X-Robots-Tag** (`middlewares/security_headers.py`):
 
 `SecurityHeadersMiddleware` добавляет `X-Robots-Tag: noindex, nofollow` для:

@@ -1,12 +1,15 @@
 // Описание: Viewer-стратегия для 3D-карты треков (kartoid.com iframe). Реализует контракт viewer-стратегии:
 //   buildFileListHtml, buildViewersHtml, autoLoad, getHashStateOnTabSwitch.
-//   Фрейм сам берёт треки из /api/archive/…?original=1 (CORS — middlewares/kartoid_cors.py), без подготовки кеша.
+//   Треки — одной ссылкой на /cache/, как у nakarte.me: все треки отчёта — архивом (getGpsAllTracksUrl), один — сам трек.
+//   Файл скачивает сервер Kartoid; ссылка и поля отчёта — в hash адреса. Кеш готовит resolve при открытии вкладки;
+//   не подготовил — фрейм открывается с fail=<код> (FAIL_CODES), и причину показывает Kartoid.
 
 import { CONSTANTS, TAB_TOKENS } from '../../../../config/constants.js';
 import { escapeAttribute } from '../../../../utils/sanitize.js';
 import { FileUtils } from '../../../fileUtils.js';
 import { DataFormatter } from '../../dataFormatter.js';
-import { activateViewerIframe, EXTERNAL_SVG } from './viewerHelpers.js';
+import { activateViewerIframe, resolveAndWait, spinnerPlaceholderHtml, EXTERNAL_SVG } from './viewerHelpers.js';
+import { getGpsAllTracksUrl } from './trackViewer.js';
 
 /** Маппинг параметров Kartoid -> колонки отчёта */
 const FIELDS = [
@@ -15,8 +18,23 @@ const FIELDS = [
     ['author', 'Автор'], ['city', 'Город'], ['note', 'Комментарии'], ['uploaded', 'ДатаВремяЗагрузки'], ['uploader', 'ЗагрузилИмя'],
 ];
 
+/** Статус resolve -> код fail фрейма Kartoid (missing, broken, timeout; иначе offline) */
+const FAIL_CODES = { not_found: 'missing', not_prepared: 'missing', error: 'broken', timeout: 'timeout' };
+
 /**
- * Формирует URL Kartoid: треки, шифр и поля отчёта, ссылка на отчёт.
+ * Файл треков в /cache/ и параметры resolve для него.
+ * @param {object[]} files
+ * @param {string} archiveName
+ * @returns {{url: string, kind: string, path: string}}
+ */
+function cacheTarget(files, archiveName) {
+    const allTracksUrl = getGpsAllTracksUrl(files, archiveName);
+    if (allTracksUrl) return { url: allTracksUrl, kind: 'all_tracks', path: '' };
+    return { url: files[0].download_url, kind: 'track', path: files[0].name };
+}
+
+/**
+ * Формирует URL Kartoid: файл треков, шифр и поля отчёта, ссылка на отчёт.
  * @param {string} baseUrl
  * @param {object[]} files
  * @param {{archiveName: string, row: object}} ctx
@@ -24,9 +42,7 @@ const FIELDS = [
  */
 function buildKartoidUrl(baseUrl, files, { archiveName, row }) {
     const params = new URLSearchParams();
-    files.forEach(file => {
-        params.append('p', `${window.location.origin}${CONSTANTS.API.ARCHIVE_BASE}/${encodeURIComponent(archiveName)}/file/${encodeURIComponent(file.name)}?original=1`);
-    });
+    params.set('p', `${window.location.origin}${cacheTarget(files, archiveName).url}`);
     const { linkText, shareUrl } = DataFormatter.buildRowDownloadInfo(row);
     params.set('code', linkText);
     for (const [key, column] of FIELDS) {
@@ -35,11 +51,11 @@ function buildKartoidUrl(baseUrl, files, { archiveName, row }) {
     }
     params.set('from', shareUrl);
     params.set('fromName', `Открыть отчёт на ${window.location.hostname}`);
-    return `${baseUrl}?${params.toString()}`;
+    return `${baseUrl}#${params.toString()}`;
 }
 
 /**
- * Генерирует HTML содержимого file-list: ссылку на редактор Kartoid.
+ * Генерирует HTML содержимого file-list: ссылку на редактор Kartoid. Ссылка неактивна, пока кеш не готов.
  * @param {object[]} files
  * @param {{shifr: string|number, dopShifr: string, archiveName: string, row: object}} ctx
  * @returns {string}
@@ -47,7 +63,7 @@ function buildKartoidUrl(baseUrl, files, { archiveName, row }) {
 export function buildFileListHtml(files, ctx) {
     const url = buildKartoidUrl(CONSTANTS.EXTERNAL_URLS.KARTOID_MAP, files, ctx);
     const windowName = FileUtils.makeWindowName(ctx.shifr, ctx.dopShifr, 'kartoid');
-    return `<a href="${escapeAttribute(url)}" target="${escapeAttribute(windowName)}" rel="noopener">Открыть в редакторе Картоид ${EXTERNAL_SVG}</a>`;
+    return `<a href="${escapeAttribute(url)}" target="${escapeAttribute(windowName)}" rel="noopener" data-pending-track="kartoid">Открыть в редакторе Картоид ${EXTERNAL_SVG}</a>`;
 }
 
 /**
@@ -58,19 +74,35 @@ export function buildFileListHtml(files, ctx) {
  */
 export function buildViewersHtml(files, ctx) {
     const url = buildKartoidUrl(CONSTANTS.EXTERNAL_URLS.KARTOID_TRACK, files, ctx);
+    const { kind, path } = cacheTarget(files, ctx.archiveName);
 
-    return `<div class="viewer-container">
-        <iframe referrerpolicy="no-referrer" class="viewer" title="Просмотр треков на kartoid.com" data-pending-url="${escapeAttribute(url)}" allow="clipboard-write; web-share; fullscreen; geolocation"></iframe>
+    return `<div class="viewer-container" data-archive-name="${escapeAttribute(ctx.archiveName)}" data-kind="${kind}" data-path="${escapeAttribute(path)}">
+        ${spinnerPlaceholderHtml('track-loading-placeholder')}
+        <iframe referrerpolicy="no-referrer" class="viewer" title="Просмотр треков на kartoid.com" data-pending-url="${escapeAttribute(url)}" style="display:none"></iframe>
     </div>`;
 }
 
 /**
- * Автоматически загружает карту при активации таба.
+ * Готовит кеш и загружает карту при активации таба.
  * @param {HTMLElement} tabContent
  */
-export function autoLoad(tabContent) {
+export async function autoLoad(tabContent) {
     const iframe = tabContent?.querySelector('iframe[data-pending-url]');
-    if (iframe) activateViewerIframe(iframe.parentElement, iframe, iframe.dataset.pendingUrl);
+    if (!iframe || iframe.dataset.loading) return;
+    iframe.dataset.loading = '1';
+    const container = iframe.parentElement;
+    const { archiveName, kind, path } = container.dataset;
+    try {
+        await resolveAndWait(container, archiveName, kind, path);
+        activateViewerIframe(container, iframe, iframe.dataset.pendingUrl);
+        tabContent.querySelector('a[data-pending-track="kartoid"]')?.removeAttribute('data-pending-track');
+    } catch (error) {
+        // Причину показывает и учитывает Kartoid: во фрейме — текст и совет, что делать
+        console.error(`Error loading Kartoid map for ${archiveName}:`, error);
+        activateViewerIframe(container, iframe, `${iframe.dataset.pendingUrl}&fail=${FAIL_CODES[error.status] || 'offline'}`);
+    } finally {
+        delete iframe.dataset.loading;
+    }
 }
 
 /**
